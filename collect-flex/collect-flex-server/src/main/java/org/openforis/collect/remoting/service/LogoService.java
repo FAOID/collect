@@ -17,5 +17,10 @@ public class LogoService {
 	public byte[] loadLogo(int id) {
 		return logoManager.loadLogo(id);
 	}
+	
+	public void storeLogo(Logo logo)
+	{
+		logoManager.storeLogo(logo);
+	}
 
 }
