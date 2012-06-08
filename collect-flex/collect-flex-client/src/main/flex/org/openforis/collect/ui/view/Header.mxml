@@ -37,9 +37,9 @@
 		]]>
 	</fx:Script>
 	
-	<s:Group>
+	<mx:HBox width="98%">
         <s:Image source="@Embed(source='/assets/images/banner.jpg')"/>
-        <s:Image source="{logoData}" right="0" /> 
-	</s:Group>
-	
+		<s:Spacer width="100%"/>
+        <s:Image source="{logoData}"/> 
+	</mx:HBox>
 </s:Group>

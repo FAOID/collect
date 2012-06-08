@@ -4,6 +4,7 @@
 package org.openforis.collect.remoting.service;
 
 import org.openforis.collect.manager.LogoManager;
+import org.openforis.collect.model.Logo;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
