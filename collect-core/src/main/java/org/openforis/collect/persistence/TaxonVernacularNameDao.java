@@ -12,6 +12,7 @@ import java.util.List;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SelectConditionStep;
+import org.jooq.SelectLimitStep;
 import org.jooq.SimpleSelectQuery;
 import org.jooq.StoreQuery;
 import org.jooq.TableField;
@@ -64,6 +65,7 @@ public class TaxonVernacularNameDao extends MappingJooqDaoSupport<TaxonVernacula
 			}
 		}
 		selectConditionStep.limit(maxResults);
+		selectConditionStep.orderBy(OFC_TAXON_VERNACULAR_NAME.VERNACULAR_NAME);
 		Result<?> result = selectConditionStep.fetch();
 		List<TaxonVernacularName> entities = jf.fromResult(result);
 		return entities;
@@ -94,7 +96,7 @@ public class TaxonVernacularNameDao extends MappingJooqDaoSupport<TaxonVernacula
 		TaxonVernacularNameDao.JooqFactory jf = getMappingJooqFactory();
 		SimpleSelectQuery<?> query = jf.selectContainsQuery(OFC_TAXON_VERNACULAR_NAME.VERNACULAR_NAME, searchString);
 		query.addLimit(maxResults);
-		
+		query.addOrderBy(OFC_TAXON_VERNACULAR_NAME.VERNACULAR_NAME);
 		for ( String s : hashQualifier.keySet()) {	
 			TableField field = null;
 			if(s.equals("qualifier1")){
