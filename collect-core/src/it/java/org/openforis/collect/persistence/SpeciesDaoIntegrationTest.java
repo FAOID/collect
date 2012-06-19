@@ -138,12 +138,12 @@ public class SpeciesDaoIntegrationTest {
 
 	@Test
 	public void testFindVernacularName() throws Exception {
-		testFindVernacularName("walnut", 100, 3);
+		testFindVernacularName("walnut", 100, 2);
 	}
 
 	@Test
 	public void testFindVernacularNameMaxResults() throws Exception {
-		testFindVernacularName("walnut", 3, 3);
+		testFindVernacularName("walnut", 3, 2);
 	}
 
 	@Test

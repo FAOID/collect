@@ -76,7 +76,7 @@ public abstract class MappingJooqFactory<E> extends DialectAwareJooqFactory {
 			throw new IllegalArgumentException("Search string required");
 		}
 		SimpleSelectQuery<?> select = selectQuery(getTable());
-		searchString = "%" + searchString.toUpperCase() + "%";
+		searchString = searchString.toUpperCase() + "%";
 		select.addConditions(upper(field).like(searchString));
 		return select;
 	}

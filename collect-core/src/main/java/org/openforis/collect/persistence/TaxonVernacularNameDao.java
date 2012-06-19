@@ -43,7 +43,7 @@ public class TaxonVernacularNameDao extends MappingJooqDaoSupport<TaxonVernacula
 	public List<TaxonVernacularName> findByVernacularName(int taxonomyId, String searchString, HashMap<String, String> hashQualifier, int maxResults) {
 		JooqFactory jf = getMappingJooqFactory();
 		//find containing
-		searchString = "%" + searchString.toUpperCase() + "%";
+		searchString = searchString.toUpperCase() + "%";
 		
 		SelectConditionStep selectConditionStep = jf.select(OFC_TAXON_VERNACULAR_NAME.getFields())
 			.from(OFC_TAXON_VERNACULAR_NAME)
