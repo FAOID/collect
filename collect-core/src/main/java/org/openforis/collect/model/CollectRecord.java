@@ -124,6 +124,7 @@ public class CollectRecord extends Record {
 	private transient Integer skipped;
 	private transient Integer errors;
 	private transient Integer warnings;
+	private transient Integer surveyId;
 	
 	private List<String> rootEntityKeyValues;
 	private List<Integer> entityCounts;
@@ -143,6 +144,7 @@ public class CollectRecord extends Record {
 		// use List to preserve the order of the keys and counts
 		rootEntityKeyValues = new ArrayList<String>();
 		entityCounts = new ArrayList<Integer>();
+		surveyId = survey.getId();
 		initErrorCountInfo();
 	}
 
@@ -588,6 +590,14 @@ public class CollectRecord extends Record {
 			}
 		}
 		return result;
+	}
+
+	public Integer getSurveyId() {
+		return surveyId;
+	}
+
+	public void setSurveyId(Integer surveyId) {
+		this.surveyId = surveyId;
 	}
 
 }

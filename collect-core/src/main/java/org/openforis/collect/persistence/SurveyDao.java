@@ -86,9 +86,8 @@ public class SurveyDao extends JooqDaoSupport {
 		Schema schema = survey.getSchema();
 		Collection<NodeDefinition> definitions = schema.getAllDefinitions();
 		for (NodeDefinition definition : definitions) {
-			int definitionId = jf.nextval(OFC_SCHEMA_DEFINITION_ID_SEQ)
-					.intValue();
-			String path = definition.getPath();
+			int definitionId = definition.getId(); //= jf.nextval(OFC_SCHEMA_DEFINITION_ID_SEQ).intValue();
+			String path = definition.getPath();			
 			jf.insertInto(OFC_SCHEMA_DEFINITION)
 					.set(OFC_SCHEMA_DEFINITION.ID, definitionId)
 					.set(OFC_SCHEMA_DEFINITION.SURVEY_ID, surveyId)
@@ -247,27 +246,30 @@ public class SurveyDao extends JooqDaoSupport {
 		Collection<NodeDefinition> definitions = schema.getAllDefinitions();
 		System.out.println("Enumerating all nodeDefinition.");
 		for (NodeDefinition definition : definitions) {
-			int definitionId = jf.nextval(OFC_SCHEMA_DEFINITION_ID_SEQ)
-					.intValue();
-			String path = definition.getPath();
+			int definitionId = definition.getId(); //= jf.nextval(OFC_SCHEMA_DEFINITION_ID_SEQ).intValue();
+			String newPath = definition.getPath();
 			
 			
-			query = jf.select(OFC_SCHEMA_DEFINITION.ID)
+			query = jf.select(OFC_SCHEMA_DEFINITION.PATH)
 					.from(OFC_SCHEMA_DEFINITION)
-					.where(OFC_SCHEMA_DEFINITION.PATH.equal(path))
+					.where(OFC_SCHEMA_DEFINITION.ID.equal(definitionId))
 					.and(OFC_SCHEMA_DEFINITION.SURVEY_ID.equal(surveyId));
 			query.execute();
 			result = query.getResult();
 			if (result.isEmpty()) {
-				System.out.println("    Schema definition " + path + " not exist. Inserting.");
+				System.out.println("\t[Inserting] Schema definition ID " + definitionId + " not exist.");
 				jf.insertInto(OFC_SCHEMA_DEFINITION)
 						.set(OFC_SCHEMA_DEFINITION.ID, definitionId)
 						.set(OFC_SCHEMA_DEFINITION.SURVEY_ID, surveyId)
-						.set(OFC_SCHEMA_DEFINITION.PATH, path).execute();
+						.set(OFC_SCHEMA_DEFINITION.PATH, newPath).execute();
 				definition.setId(definitionId);
 			}else{
-				System.out.println("    Schema definition " + path + " exist. Updating.");
-				//TODO maintain integrity
+				System.out.println("\t[Updating] Schema definition ID " + definitionId + " exist.");
+				String oldPath = result.getValueAsString(0, OFC_SCHEMA_DEFINITION.PATH);
+				if(!oldPath.equals(newPath))
+				{
+					System.out.println("\t\tRenaming node with ID =" + definitionId + " from " + oldPath + " to " + newPath);
+				}
 			}
 		}
 
