@@ -26,7 +26,7 @@ CREATE TABLE "collect"."ofc_logo"  (
 CREATE TABLE "collect"."ofc_record"  ( 
 	"id"                       	integer NOT NULL,
 	"root_entity_definition_id"	integer NOT NULL,
-    "root_survey_id"            integer NOT NULL,
+    "survey_id"            integer NOT NULL,
 	"date_created"             	timestamp NULL,
 	"created_by_id"            	integer NULL,
 	"date_modified"            	timestamp NULL,
@@ -121,7 +121,7 @@ ALTER TABLE "collect"."ofc_taxonomy"
 
 ALTER TABLE "collect"."ofc_record"
 	ADD CONSTRAINT "ofc_record_root_entity_definition_fkey"
-	FOREIGN KEY("root_entity_definition_id","root_survey_id")
+	FOREIGN KEY("root_entity_definition_id","survey_id")
 	REFERENCES "collect"."ofc_schema_definition"("id","survey_id");
 
 ALTER TABLE "collect"."ofc_schema_definition"

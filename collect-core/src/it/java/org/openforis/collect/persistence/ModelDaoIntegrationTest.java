@@ -140,6 +140,7 @@ public class ModelDaoIntegrationTest {
 
 	private CollectRecord createTestRecord(CollectSurvey survey, String id) {
 		CollectRecord record = new CollectRecord(survey, "2.0");
+		record.setSurvey_id(survey.getId());
 		Entity cluster = record.createRootEntity("cluster");
 		
 		record.setCreationDate(new GregorianCalendar(2011, 12, 31, 23, 59).getTime());
