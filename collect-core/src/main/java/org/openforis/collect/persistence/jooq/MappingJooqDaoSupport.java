@@ -71,13 +71,13 @@ public class MappingJooqDaoSupport<E, J extends MappingJooqFactory<E>> extends J
 		}
 	}
 	
-	@Transactional
+	//@Transactional
 	protected void insert(E entity) {
 		J jf = getMappingJooqFactory();
 		jf.insertQuery(entity).execute();
 	}
 	
-	@Transactional
+	//@Transactional
 	protected void update(E entity) {
 		J jf = getMappingJooqFactory();
 		jf.updateQuery(entity).execute();
