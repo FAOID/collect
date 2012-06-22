@@ -1,5 +1,6 @@
 package org.openforis.collect.persistence;
 
+import static org.openforis.collect.persistence.jooq.Sequences.OFC_SCHEMA_DEFINITION_ID_SEQ;
 import static org.openforis.collect.persistence.jooq.Sequences.OFC_SURVEY_ID_SEQ;
 import static org.openforis.collect.persistence.jooq.tables.OfcRecord.OFC_RECORD;
 import static org.openforis.collect.persistence.jooq.tables.OfcSchemaDefinition.OFC_SCHEMA_DEFINITION;
@@ -11,6 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -84,8 +86,9 @@ public class SurveyDao extends JooqDaoSupport {
 		Schema schema = survey.getSchema();
 		Collection<NodeDefinition> definitions = schema.getAllDefinitions();
 		for (NodeDefinition definition : definitions) {
-			int definitionId = definition.getId(); //= jf.nextval(OFC_SCHEMA_DEFINITION_ID_SEQ).intValue();
-			String path = definition.getPath();			
+			int definitionId = jf.nextval(OFC_SCHEMA_DEFINITION_ID_SEQ)
+					.intValue();
+			String path = definition.getPath();
 			jf.insertInto(OFC_SCHEMA_DEFINITION)
 					.set(OFC_SCHEMA_DEFINITION.ID, definitionId)
 					.set(OFC_SCHEMA_DEFINITION.SURVEY_ID, surveyId)
@@ -244,30 +247,27 @@ public class SurveyDao extends JooqDaoSupport {
 		Collection<NodeDefinition> definitions = schema.getAllDefinitions();
 		System.out.println("Enumerating all nodeDefinition.");
 		for (NodeDefinition definition : definitions) {
-			int definitionId = definition.getId(); //= jf.nextval(OFC_SCHEMA_DEFINITION_ID_SEQ).intValue();
-			String newPath = definition.getPath();
+			int definitionId = jf.nextval(OFC_SCHEMA_DEFINITION_ID_SEQ)
+					.intValue();
+			String path = definition.getPath();
 			
 			
-			query = jf.select(OFC_SCHEMA_DEFINITION.PATH)
+			query = jf.select(OFC_SCHEMA_DEFINITION.ID)
 					.from(OFC_SCHEMA_DEFINITION)
-					.where(OFC_SCHEMA_DEFINITION.ID.equal(definitionId))
+					.where(OFC_SCHEMA_DEFINITION.PATH.equal(path))
 					.and(OFC_SCHEMA_DEFINITION.SURVEY_ID.equal(surveyId));
 			query.execute();
 			result = query.getResult();
 			if (result.isEmpty()) {
-				System.out.println("\t[Inserting] Schema definition ID " + definitionId + " not exist.");
+				System.out.println("    Schema definition " + path + " not exist. Inserting.");
 				jf.insertInto(OFC_SCHEMA_DEFINITION)
 						.set(OFC_SCHEMA_DEFINITION.ID, definitionId)
 						.set(OFC_SCHEMA_DEFINITION.SURVEY_ID, surveyId)
-						.set(OFC_SCHEMA_DEFINITION.PATH, newPath).execute();
+						.set(OFC_SCHEMA_DEFINITION.PATH, path).execute();
 				definition.setId(definitionId);
 			}else{
-				System.out.println("\t[Updating] Schema definition ID " + definitionId + " exist.");
-				String oldPath = result.getValueAsString(0, OFC_SCHEMA_DEFINITION.PATH);
-				if(!oldPath.equals(newPath))
-				{
-					System.out.println("\t\tRenaming node with ID =" + definitionId + " from " + oldPath + " to " + newPath);
-				}
+				System.out.println("    Schema definition " + path + " exist. Updating.");
+				//TODO maintain integrity
 			}
 		}
 

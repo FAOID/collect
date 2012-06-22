@@ -41,7 +41,7 @@ public class DataMarshaller {
 	private static final String REMARKS_ATTRIBUTE = "remarks";
 	
 	public void write(CollectRecord record, Writer out) throws IOException {
-		XmlSerializer serializer = new FastXmlSerializer();
+		XmlSerializer serializer = new XmlPullSerializer();
 		serializer.setOutput(out);
 		serializer.startDocument("UTF-8", true);
 		
@@ -150,6 +150,7 @@ public class DataMarshaller {
 				int childStateInt = childState.intValue();
 				if (childStateInt > 0) {
 					serializer.startTag(null, childName);
+					serializer.attribute(null, DEFINITION_ID_ATTRIBUTE, childDefn.getId().toString());
 					serializer.attribute(null, STATE_ATTRIBUTE, Integer.toString(childStateInt));
 					serializer.endTag(null, childName);
 				}

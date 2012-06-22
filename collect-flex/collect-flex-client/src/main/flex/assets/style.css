@@ -153,7 +153,7 @@ detail|AttributeItemRenderer {
 
 detail|MultipleAttributeFormItem s|BorderContainer, 
 	detail|SingleEntityFormItem s|BorderContainer,
-	detail|MultipleEntityFormItem s|BorderContainer  {
+	detail|MultipleEntityAsTableFormItem s|BorderContainer  {
 	borderColor: #FFFFFF;
 	borderWeight: 1;
 }
@@ -161,14 +161,14 @@ detail|MultipleAttributeFormItem s|BorderContainer,
 detail|AttributeItemRenderer.error, 
 	detail|MultipleAttributeFormItem.error s|BorderContainer,
 	detail|SingleEntityFormItem.error s|BorderContainer,
-	detail|MultipleEntityFormItem.error s|BorderContainer {
+	detail|MultipleEntityAsTableFormItem.error s|BorderContainer {
 	borderColor: #FF0000;
 }
 
 detail|AttributeItemRenderer.warning, 
 	detail|MultipleAttributeFormItem.warning s|BorderContainer,
 	detail|SingleEntityFormItem.warning s|BorderContainer,
-	detail|MultipleEntityFormItem.warning s|BorderContainer {
+	detail|MultipleEntityAsTableFormItem.warning s|BorderContainer {
 	borderColor: #FF8800;
 }
 
@@ -244,16 +244,11 @@ input|TaxonAutoCompletePopUp s|DataGrid {
 	alternatingRowColors: #FFFFFF, #E9E9E9;
 }
 
-s|Label.bold {
+s|Label.bold, .formLabel {
 	fontWeight: bold;
 }
 
-s|Label.fixedCode {
-	fontSize: 10;
-	fontFamily: Verdana;
-}
-
-s|Label.unit {
+s|Label.fixedCode, s|Label.unit {
 	fontSize: 10;
 	fontFamily: Verdana;
 }
@@ -283,8 +278,10 @@ s|Label.indent {
 	skinClass: ClassReference("org.openforis.collect.ui.skin.DataGroupHeaderSkin");
 }
 
-.formLabel {
+s|Label.dataGroupHeader {
 	fontWeight: bold;
+	font-size: 10;
+	fontFamily: Verdana;
 }
 
 .infoMessage {
