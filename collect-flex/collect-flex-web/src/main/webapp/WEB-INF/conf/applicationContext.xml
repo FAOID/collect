@@ -61,11 +61,11 @@
 	<bean id="unlockController" class="org.openforis.collect.web.controller.UnlockController" />
 	<bean id="dataExportDownloadController" class="org.openforis.collect.web.controller.DataExportDownloadController" />
 	<bean id="surveyImportController" class="org.openforis.collect.web.controller.SurveyImportController" />
+	<bean id="validationController" class="org.openforis.collect.web.controller.ValidationController" />
 
 	<!-- ===================================== -->
 	<!-- GraniteDs services -->
 	<!-- ===================================== -->
-	<bean id="backupService" 	class="org.openforis.collect.remoting.service.BackupService" autowire="byName" init-method="init" />
 	<bean id="dataService" 		class="org.openforis.collect.remoting.service.DataService" autowire="byName" />
 	<bean id="dataExportService" class="org.openforis.collect.remoting.service.DataExportService" autowire="byName" init-method="init" scope="session" />
 	<bean id="logoService" 	class="org.openforis.collect.remoting.service.LogoService" autowire="byName" />
@@ -100,7 +100,7 @@
 <!-- 	<bean id="recordContext" class="org.openforis.collect.model.CollectRecordContext" /> -->
 	
 	<!-- XmlSerializerFactory -->
-	<bean id="xmlSerializerFactory" class="org.openforis.collect.persistence.xml.FastXmlSerializerFactory" />
+	<bean id="xmlSerializerFactory" class="org.openforis.collect.persistence.xml.XmlPullSerializerFactory" />
 	
 	<!-- XML DataMarshaller -->
 	<bean id="dataMarshaller" class="org.openforis.collect.persistence.xml.DataMarshaller" lazy-init="false" autowire-candidate="true" autowire="byName" />

@@ -130,7 +130,12 @@ public class RecordManager {
 	}
 	
 	@Transactional
-	public List<CollectRecord> getSummaries(CollectSurvey survey, String rootEntity, String... keys) {
+	public List<CollectRecord> loadSummaries(CollectSurvey survey, String rootEntity) {
+		return loadSummaries(survey, rootEntity, (String[]) null);
+	}
+
+	@Transactional
+	public List<CollectRecord> loadSummaries(CollectSurvey survey, String rootEntity, String... keys) {
 		return recordDao.loadSummaries(survey, rootEntity, keys);
 	}
 	
@@ -265,6 +270,16 @@ public class RecordManager {
 		record.setState( State.REJECTED );
 		record.updateDerivedStates();
 		recordDao.update( record );
+	}
+	
+	@Transactional
+	public void validate(CollectSurvey survey, User user, String sessionId, int recordId, Step step) throws RecordLockedException, MultipleEditException {
+		isLockAllowed(user, recordId, sessionId, true);
+		lock(recordId, user, sessionId, true);
+		CollectRecord record = recordDao.load(survey, recordId, step.getStepNumber());
+		record.updateDerivedStates();
+		recordDao.update(record);
+		releaseLock(recordId);
 	}
 	
 	public Entity addEntity(Entity parentEntity, String nodeName) {
