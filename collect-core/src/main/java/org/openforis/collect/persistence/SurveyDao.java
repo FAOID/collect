@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -22,6 +23,8 @@ import org.openforis.collect.model.CollectSurveyContext;
 import org.openforis.collect.persistence.jooq.JooqDaoSupport;
 import org.openforis.collect.persistence.xml.CollectIdmlBindingContext;
 import org.openforis.idm.metamodel.ExternalCodeListProvider;
+import org.openforis.idm.metamodel.NodeDefinition;
+import org.openforis.idm.metamodel.Schema;
 import org.openforis.idm.metamodel.Survey;
 import org.openforis.idm.metamodel.validation.Validator;
 import org.openforis.idm.metamodel.xml.InvalidIdmlException;
@@ -216,6 +219,16 @@ public class SurveyDao extends JooqDaoSupport {
 					.set(OFC_SURVEY.URI, survey.getUri())
 					.where(OFC_SURVEY.ID.equal(survey.getId())).execute();
 		}
+		
+		// Insert SCHEMA_DEFINITIONs for new Fields only
+		Schema schema = survey.getSchema();
+		Collection<NodeDefinition> definitions = schema.getAllDefinitions();
+		System.out.println("Enumerating all nodeDefinition.");
+		for (NodeDefinition definition : definitions) {
+			String path = definition.getPath();
+			System.out.println(definition.getId() + ":" + path);
+		}
 
+				
 	}
 }
