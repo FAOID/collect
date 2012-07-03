@@ -31,7 +31,7 @@ package org.openforis.collect.presenter {
 	import org.openforis.collect.model.proxy.RecordProxy;
 	import org.openforis.collect.ui.UIBuilder;
 	import org.openforis.collect.ui.component.DataExportPopUp;
-	import org.openforis.collect.ui.component.DataImportPopUp;
+	//import org.openforis.collect.ui.component.DataImportPopUp;
 	import org.openforis.collect.ui.component.RecordFilterPopUp;
 	import org.openforis.collect.ui.component.SelectVersionPopUp;
 	import org.openforis.collect.ui.component.datagrid.PaginationBar;
@@ -117,7 +117,7 @@ package org.openforis.collect.presenter {
 		protected function adminSettingsItemClickHandler(event:MenuEvent):void {
 			switch ( event.item ) {
 				case IMPORT_DATA_ITEM:
-					var popUp:IFlexDisplayObject = PopUpUtil.createPopUp(DataImportPopUp, true);
+					//var popUp:IFlexDisplayObject = PopUpUtil.createPopUp(DataImportPopUp, true);
 					break;
 			}
 		}
