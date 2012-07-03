@@ -1,11 +1,9 @@
 package org.openforis.collect.remoting.service.dataImport;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.openforis.collect.model.CollectRecord.Step;
+import org.openforis.collect.model.CollectRecord;
 import org.openforis.collect.remoting.service.dataProcessing.DataProcessingState;
 
 
@@ -16,28 +14,37 @@ import org.openforis.collect.remoting.service.dataProcessing.DataProcessingState
  */
 public class DataImportState extends DataProcessingState {
 
-	private List<String> skippedFileNames;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public enum Step {
+		PREPARE, INITED, IMPORTING, CONFLICT, COMPLETE, CANCELLED, ERROR;
+	}
+	
+	private Step step;
+	private boolean newSurvey;
 	private Map<String, String> errors;
 	private Map<String, String> warnings;
 	
-	private Map<Step, Integer> totalPerStep;
+	private Map<CollectRecord.Step, Integer> totalPerStep;
 	
 	private int insertedCount;
 	private int updatedCount;
+	private DataImportConflict conflict;
+	private String conflictingEntryName;
 
 	public DataImportState() {
 		super();
 		insertedCount = 0;
 		updatedCount = 0;
-		skippedFileNames = new ArrayList<String>();
 		errors = new HashMap<String, String>();
 		warnings = new HashMap<String, String>();
+		totalPerStep = new HashMap<CollectRecord.Step, Integer>();
+		step = Step.PREPARE;
 	}
 
-	public void addSkipped(String entryName) {
-		skippedFileNames.add(entryName);
-	}
-	
 	public void addError(String fileName, String error) {
 		errors.put(fileName, error);
 	}
@@ -46,24 +53,22 @@ public class DataImportState extends DataProcessingState {
 		warnings.put(fileName, warning);
 	}
 
-	public List<String> getSkippedFileNames() {
-		return skippedFileNames;
-	}
-
-	public Map<Step, Integer> getTotalPerStep() {
+	public Map<CollectRecord.Step, Integer> getTotalPerStep() {
 		return totalPerStep;
 	}
 
-	public void setTotalPerStep(Map<Step, Integer> totalPerStep) {
+	public void setTotalPerStep(Map<CollectRecord.Step, Integer> totalPerStep) {
 		this.totalPerStep = totalPerStep;
 	}
 	
 	public void incrementInsertedCount() {
 		insertedCount ++;
+		incrementCount();
 	}
 	
 	public void incrementUpdatedCount() {
 		updatedCount ++;
+		incrementCount();
 	}
 
 	public int getInsertedCount() {
@@ -73,37 +78,45 @@ public class DataImportState extends DataProcessingState {
 	public int getUpdatedCount() {
 		return updatedCount;
 	}
+
+	public Map<String, String> getErrors() {
+		return errors;
+	}
+
+	public Map<String, String> getWarnings() {
+		return warnings;
+	}
+
+	public DataImportConflict getConflict() {
+		return conflict;
+	}
 	
+	public void setConflict(DataImportConflict conflict) {
+		this.conflict = conflict;
+	}
+
+	public boolean isNewSurvey() {
+		return newSurvey;
+	}
+
+	public void setNewSurvey(boolean newSurvey) {
+		this.newSurvey = newSurvey;
+	}
+
+	public Step getStep() {
+		return step;
+	}
+
+	public void setStep(Step step) {
+		this.step = step;
+	}
+
+	public String getConflictingEntryName() {
+		return conflictingEntryName;
+	}
+
+	public void setConflictingEntryName(String conflictingEntryName) {
+		this.conflictingEntryName = conflictingEntryName;
+	}
 	
-	
-	
-//	public class RecordEntry {
-//		
-//		private Step step;
-//		private int recordId;
-//		private String recordKeys;
-//		
-//		public RecordEntry(Step step, int recordId, String recordKeys) {
-//			super();
-//			this.step = step;
-//			this.recordId = recordId;
-//			this.recordKeys = recordKeys;
-//		}
-//
-//		public Step getStep() {
-//			return step;
-//		}
-//
-//		public int getRecordId() {
-//			return recordId;
-//		}
-//
-//		public String getRecordKeys() {
-//			return recordKeys;
-//		}
-//		
-//		
-//		
-//	}
-//	
 }

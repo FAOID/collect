@@ -24,45 +24,55 @@ import org.openforis.collect.model.CollectSurvey;
 import org.openforis.collect.model.CollectSurveyContext;
 import org.openforis.collect.model.User;
 import org.openforis.collect.persistence.RecordDao;
+import org.openforis.collect.persistence.SurveyImportException;
 import org.openforis.collect.persistence.xml.CollectIdmlBindingContext;
 import org.openforis.collect.persistence.xml.DataHandler;
 import org.openforis.collect.persistence.xml.DataUnmarshaller;
 import org.openforis.collect.persistence.xml.DataUnmarshallerException;
 import org.openforis.idm.metamodel.xml.InvalidIdmlException;
 import org.openforis.idm.metamodel.xml.SurveyUnmarshaller;
+import org.openforis.idm.model.Entity;
 import org.openforis.idm.model.expression.ExpressionFactory;
 
 /**
  * 
  * @author S. Ricci
- *
+ * 
  */
 public class DataImportProcess implements Callable<Void> {
 
 	private static Log LOG = LogFactory.getLog(DataImportProcess.class);
 
-	private static final String FILE_NAME = "data_import.zip";
+	private static final Object IDML_FILE_NAME = "idml.xml";
 
 	private RecordManager recordManager;
 	private RecordDao recordDao;
 	private SurveyManager surveyManager;
-	
+
 	private Map<String, User> users;
 	private String surveyName;
-	private String rootEntityName;
 	private DataImportState state;
 	private File packagedFile;
-	
-	public DataImportProcess(SurveyManager surveyManager, RecordManager recordManager, Map<String, User> users, 
-			String surveyName, String rootEntityName, File packagedFile) {
+
+	private CollectSurvey packagedSurvey;
+	private CollectSurvey existingSurvey;
+
+	private boolean overwriteAll;
+
+	private boolean overwriteExistingRecordInConflict;
+
+	private DataUnmarshaller dataUnmarshaller;
+
+	public DataImportProcess(SurveyManager surveyManager, RecordManager recordManager, RecordDao recordDao, Map<String, User> users, File packagedFile, boolean overwriteAll) {
 		super();
 		this.surveyManager = surveyManager;
 		this.recordManager = recordManager;
+		this.recordDao = recordDao;
 		this.users = users;
-		this.surveyName = surveyName;
-		this.rootEntityName = rootEntityName;
 		this.packagedFile = packagedFile;
+		this.overwriteAll = overwriteAll;
 		this.state = new DataImportState();
+		this.overwriteExistingRecordInConflict = false;
 	}
 
 	public DataImportState getState() {
@@ -72,133 +82,172 @@ public class DataImportProcess implements Callable<Void> {
 	public void cancel() {
 		state.setCancelled(true);
 		state.setRunning(false);
+		state.setStep(DataImportState.Step.CANCELLED);
 	}
-	
+
 	public boolean isRunning() {
 		return state.isRunning();
 	}
-	
+
 	public boolean isComplete() {
 		return state.isComplete();
 	}
-	
+
 	public void init() throws DataImportExeption {
 		try {
 			state.reset();
-			Map<Step, Integer> totalRecords = new HashMap<CollectRecord.Step, Integer>();
+			state.setStep(DataImportState.Step.PREPARE);
+			packagedSurvey = extractPackagedSurvey();
+
+			String uri = packagedSurvey.getUri();
+			CollectSurvey survey = surveyManager.getByUri(uri);
+			state.setNewSurvey(survey == null);
+			Map<CollectRecord.Step, Integer> totalRecords = new HashMap<CollectRecord.Step, Integer>();
 			int total = 0;
 			ZipFile zipFile = new ZipFile(packagedFile);
 			Enumeration<? extends ZipEntry> entries = zipFile.entries();
 			while (entries.hasMoreElements()) {
 				ZipEntry zipEntry = (ZipEntry) entries.nextElement();
-				if ( zipEntry.isDirectory() ) {
+				String entryName = zipEntry.getName();
+				if (zipEntry.isDirectory() || IDML_FILE_NAME.equals(entryName)) {
 					continue;
 				}
-				String entryName = zipEntry.getName();
-				String filePathSeparator = /*Pattern.quote(File.separator);*/ Pattern.quote("/");
-				String[] entryNameSplitted = entryName.split(filePathSeparator);
-				String stepNumStr = entryNameSplitted[0];
-				int stepNum = Integer.parseInt(stepNumStr);
-				Step step = Step.valueOf(stepNum);
+				Step step = getStep(entryName);
 				Integer totalPerStep = totalRecords.get(step);
-				if ( totalPerStep == null ) {
+				if (totalPerStep == null) {
 					totalPerStep = 0;
 				}
 				totalRecords.put(step, totalPerStep + 1);
-				total ++;
+				total++;
 			}
 			state.setTotal(total);
 			state.setTotalPerStep(totalRecords);
+			state.setStep(DataImportState.Step.INITED);
 		} catch (Exception e) {
 			throw new DataImportExeption("Error initializing data import process", e);
 		}
 	}
-	
+
 	@Override
 	public Void call() throws Exception {
 		try {
-			//CollectSurvey packagedSurvey = extractPackagedSurvey();
-
-			CollectSurvey existingSurvey = surveyManager.get(surveyName);
-			
-			//TODO compare packaged survey with the one into db matching surveyName (if any)
-			CollectSurvey survey = existingSurvey;
-			
-			DataHandler handler = new DataHandler(survey, users);
-			
-			DataUnmarshaller dataUnmarshaller = new DataUnmarshaller(handler);
-
+			state.setRunning(true);
+			if (state.getStep() == DataImportState.Step.INITED) {
+				dataUnmarshaller = initDataUnmarshaller();
+			}
 			Step[] steps = Step.values();
 			for (Step step : steps) {
 				ZipFile zipFile = new ZipFile(packagedFile);
 				Enumeration<? extends ZipEntry> entries = zipFile.entries();
 				while (entries.hasMoreElements()) {
 					ZipEntry zipEntry = (ZipEntry) entries.nextElement();
-					if ( zipEntry.isDirectory() ) {
-						continue;
-					}
 					String entryName = zipEntry.getName();
-					String filePathSeparator = /*Pattern.quote(File.separator);*/ Pattern.quote("/");
-					String[] entryNameSplitted = entryName.split(filePathSeparator);
-					String stepNumStr = entryNameSplitted[0];
-					int stepNumber = Integer.parseInt(stepNumStr);
-					if ( stepNumber != step.getStepNumber() ) {
-						continue;
-					}
-					String fileName = entryNameSplitted[1];
-					String recordIdStr = fileName.split(Pattern.quote("."))[0];
-					LOG.info("Extracting: " + recordIdStr + " (" + entryName + ")");
-					InputStream inputStream = zipFile.getInputStream(zipEntry);
-					InputStreamReader reader = new InputStreamReader(inputStream);
-					ParseRecordResult parseRecordResult = parseRecord(dataUnmarshaller, reader);
-					CollectRecord parsedRecord = parseRecordResult.record;
-					String message = parseRecordResult.message;
-					if ( parsedRecord == null ) {
-						LOG.info("Skipped: " + recordIdStr + " (" + entryName + ")");
-						state.addSkipped(entryName);
-					} else {
-						parsedRecord.setStep(step);
-						CollectRecord oldRecord = findExistingRecord(survey, parsedRecord);
-						if ( oldRecord != null ) {
-							//TODO let the user choose what to do
-							replaceData(parsedRecord, oldRecord);
-							recordDao.update(oldRecord);
-							state.incrementUpdatedCount();
-							LOG.info("Updated: " + oldRecord.getId() + " (from file " + entryName + ")");
-						} else {
-							CollectRecord record = new CollectRecord(survey, parsedRecord.getVersion().getName());
-							recordDao.insert(record);
-							state.incrementInsertedCount();
-							LOG.info("Inserted: " + record.getId() + " (from file " + entryName + ")");
-						}
-					}
-					if ( ! parseRecordResult.success ) {
-						if ( parseRecordResult.warnings > 0 ) {
-							state.addWarning(entryName, message);
-						} else {
-							state.addError(entryName, message);
+					if (!zipEntry.isDirectory() && !IDML_FILE_NAME.equals(entryName)) {
+						Step entryStep = getStep(entryName);
+						if (entryStep == step) {
+							DataImportState.Step dataImportStep = state.getStep();
+							if (dataImportStep == DataImportState.Step.CONFLICT && !state.getConflictingEntryName().equals(entryName)) {
+								continue;
+							}
+							InputStream entryInputStream = zipFile.getInputStream(zipEntry);
+							state.setStep(DataImportState.Step.IMPORTING);
+							importZipEntry(entryInputStream, entryName, step);
+							entryInputStream.close();
+							dataImportStep = state.getStep();
+							if (dataImportStep == DataImportState.Step.CONFLICT) {
+								zipFile.close();
+								return null;
+							} else {
+								overwriteExistingRecordInConflict = false;
+							}
 						}
 					}
 				}
 				zipFile.close();
 			}
-				
-			if ( ! state.isCancelled() ) {
-				state.setComplete(true);
+			DataImportState.Step step = state.getStep();
+			if (!(step == DataImportState.Step.CANCELLED || step == DataImportState.Step.CONFLICT)) {
+				state.setStep(DataImportState.Step.COMPLETE);
 			}
 		} catch (Exception e) {
 			state.setError(true);
+			state.setErrorMessage(e.getMessage());
+			state.setStep(DataImportState.Step.ERROR);
 			LOG.error("Error during data export", e);
 		} finally {
 			state.setRunning(false);
 		}
 		return null;
 	}
-	
-	private CollectRecord findExistingRecord(CollectSurvey survey, CollectRecord parsedRecord) {
+
+	private DataUnmarshaller initDataUnmarshaller() throws SurveyImportException {
+		DataHandler handler;
+		if (state.isNewSurvey()) {
+			packagedSurvey.setName(surveyName);
+			surveyManager.importModel(packagedSurvey);
+			handler = new DataHandler(packagedSurvey, users);
+		} else {
+			String uri = packagedSurvey.getUri();
+			existingSurvey = surveyManager.getByUri(uri);
+			// TODO compare packaged survey with the one into db matching surveyName (if any)
+			handler = new DataHandler(existingSurvey, packagedSurvey, users);
+		}
+		DataUnmarshaller dataUnmarshaller = new DataUnmarshaller(handler);
+		return dataUnmarshaller;
+	}
+
+	private void importZipEntry(InputStream inputStream, String entryName, Step step) throws IOException {
+		LOG.info("Extracting: " + entryName);
+		InputStreamReader reader = new InputStreamReader(inputStream);
+		ParseRecordResult parseRecordResult = parseRecord(dataUnmarshaller, reader);
+		CollectRecord parsedRecord = parseRecordResult.record;
+		String message = parseRecordResult.message;
+		DataImportState.Step dataImportStep = state.getStep();
+		Boolean promptForConflict = !overwriteAll && dataImportStep != DataImportState.Step.CONFLICT;
+		Boolean overwriteExistingRecord = overwriteAll || dataImportStep == DataImportState.Step.CONFLICT && overwriteExistingRecordInConflict;
+		if (parsedRecord == null) {
+			state.addError(entryName, message);
+			state.incrementCount();
+		} else {
+			parsedRecord.setStep(step);
+			CollectRecord oldRecord = findAlreadyExistingRecord(parsedRecord);
+			if (oldRecord != null) {
+				if (overwriteExistingRecord) {
+					replaceData(parsedRecord, oldRecord);
+					recordDao.update(oldRecord);
+					state.incrementUpdatedCount();
+					LOG.info("Updated: " + oldRecord.getId() + " (from file " + entryName + ")");
+				} else if (promptForConflict) {
+					DataImportConflict conflict = new DataImportConflict(entryName, oldRecord, parsedRecord);
+					state.setStep(DataImportState.Step.CONFLICT);
+					state.setConflict(conflict);
+					state.setConflictingEntryName(entryName);
+				} else {
+					// skip record
+					state.incrementCount();
+				}
+			} else {
+				recordDao.insert(parsedRecord);
+				state.incrementInsertedCount();
+				LOG.info("Inserted: " + parsedRecord.getId() + " (from file " + entryName + ")");
+			}
+		}
+		if (!parseRecordResult.success) {
+			if (parseRecordResult.warnings > 0) {
+				state.addWarning(entryName, message);
+			} else {
+				state.addError(entryName, message);
+			}
+		}
+	}
+
+	private CollectRecord findAlreadyExistingRecord(CollectRecord parsedRecord) {
+		CollectSurvey survey = (CollectSurvey) parsedRecord.getSurvey();
 		List<String> keyValues = parsedRecord.getRootEntityKeyValues();
-		List<CollectRecord> oldRecords = recordDao.loadSummaries(survey, rootEntityName, keyValues.toArray(new String[0]));
-		if ( oldRecords != null && oldRecords.size() == 1 ) {
+		Entity rootEntity = parsedRecord.getRootEntity();
+		String rootEntityName = rootEntity.getName();
+		List<CollectRecord> oldRecords = recordManager.loadSummaries(survey, rootEntityName, keyValues.toArray(new String[0]));
+		if (oldRecords != null && oldRecords.size() == 1) {
 			return oldRecords.get(0);
 		} else {
 			return null;
@@ -210,29 +259,27 @@ public class DataImportProcess implements Callable<Void> {
 		Enumeration<? extends ZipEntry> entries = zipFile.entries();
 		while (entries.hasMoreElements()) {
 			ZipEntry zipEntry = (ZipEntry) entries.nextElement();
-			if ( zipEntry.isDirectory() ) {
+			if (zipEntry.isDirectory()) {
 				continue;
 			}
 			String entryName = zipEntry.getName();
-			if ( FILE_NAME.equals(entryName) ) {
+			if (IDML_FILE_NAME.equals(entryName)) {
 				InputStream is = zipFile.getInputStream(zipEntry);
-				CollectSurvey survey = extractSurvey(is);
+				CollectSurvey survey = unmarshalSurvey(is);
 				return survey;
 			}
 		}
 		return null;
 	}
-	
-	public CollectSurvey extractSurvey(InputStream is) throws InvalidIdmlException {
-		CollectIdmlBindingContext idmlBindingContext = new CollectIdmlBindingContext(new CollectSurveyContext(new ExpressionFactory(), null, null));
-		SurveyUnmarshaller surveyUnmarshaller = idmlBindingContext.createSurveyUnmarshaller();
-		CollectSurvey result = (CollectSurvey) surveyUnmarshaller.unmarshal(is);
-		return result;
+
+	public CollectSurvey unmarshalSurvey(InputStream is) throws InvalidIdmlException {
+		CollectSurvey survey = surveyManager.unmarshalSurvey(is);
+		return survey;
 	}
 
 	public CollectSurvey importSurvey(String name, String idmlFilename) throws Exception {
 		CollectSurvey survey = surveyManager.get(name);
-		if(survey == null){
+		if (survey == null) {
 			CollectIdmlBindingContext idmlBindingContext = new CollectIdmlBindingContext(new CollectSurveyContext(new ExpressionFactory(), null, null));
 			SurveyUnmarshaller surveyUnmarshaller = idmlBindingContext.createSurveyUnmarshaller();
 			survey = (CollectSurvey) surveyUnmarshaller.unmarshal(idmlFilename);
@@ -241,7 +288,7 @@ public class DataImportProcess implements Callable<Void> {
 		}
 		return survey;
 	}
-	
+
 	private ParseRecordResult parseRecord(DataUnmarshaller dataUnmarshaller, Reader reader) throws IOException {
 		ParseRecordResult result = new ParseRecordResult();
 		try {
@@ -255,6 +302,9 @@ public class DataImportProcess implements Callable<Void> {
 				result.success = false;
 			} else {
 				result.success = true;
+				record.updateDerivedStates();
+				record.updateRootEntityKeyValues();
+				record.updateEntityCounts();
 			}
 		} catch (DataUnmarshallerException e) {
 			result.message = "Unable to process: " + e.getMessages().toString();
@@ -262,6 +312,21 @@ public class DataImportProcess implements Callable<Void> {
 			result.message = "Unable to process: " + e.toString();
 		}
 		return result;
+	}
+
+	private Step getStep(String zipEntryName) throws DataImportExeption {
+		String entryPathSeparator = Pattern.quote(File.separator);
+		String[] entryNameSplitted = zipEntryName.split(entryPathSeparator);
+		if (entryNameSplitted.length != 2) {
+			entryPathSeparator = Pattern.quote("/");
+			entryNameSplitted = zipEntryName.split(entryPathSeparator);
+		}
+		if (entryNameSplitted.length != 2) {
+			throw new DataImportExeption("Packaged file format exception: wrong entry name: " + zipEntryName);
+		}
+		String stepNumStr = entryNameSplitted[0];
+		int stepNumber = Integer.parseInt(stepNumStr);
+		return Step.valueOf(stepNumber);
 	}
 
 	private void replaceData(CollectRecord fromRecord, CollectRecord toRecord) {
@@ -272,18 +337,36 @@ public class DataImportProcess implements Callable<Void> {
 		toRecord.setStep(fromRecord.getStep());
 		toRecord.setState(fromRecord.getState());
 		toRecord.setRootEntity(fromRecord.getRootEntity());
+		toRecord.updateDerivedStates();
 		toRecord.updateRootEntityKeyValues();
 		toRecord.updateEntityCounts();
 	}
-	
+
+	public void setOverwriteExistingRecordInConflict(boolean overwriteExistingRecordInConflict) {
+		this.overwriteExistingRecordInConflict = overwriteExistingRecordInConflict;
+	}
+
+	public boolean isOverwriteAll() {
+		return overwriteAll;
+	}
+
+	public void setOverwriteAll(boolean overwriteAll) {
+		this.overwriteAll = overwriteAll;
+	}
+
+	public void setSurveyName(String surveyName) {
+		this.surveyName = surveyName;
+	}
+
 	private class ParseRecordResult {
 		private boolean success;
 		private String message;
 		private int warnings;
 		private CollectRecord record;
-		
+
 		public ParseRecordResult() {
 			success = false;
 		}
 	}
+
 }

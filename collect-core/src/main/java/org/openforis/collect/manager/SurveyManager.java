@@ -3,18 +3,27 @@
  */
 package org.openforis.collect.manager;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.openforis.collect.model.CollectSurvey;
+import org.openforis.collect.model.CollectSurveyContext;
 import org.openforis.collect.model.SurveySummary;
 import org.openforis.collect.persistence.SurveyDao;
 import org.openforis.collect.persistence.SurveyImportException;
+import org.openforis.collect.persistence.xml.CollectIdmlBindingContext;
 import org.openforis.idm.metamodel.LanguageSpecificText;
 import org.openforis.idm.metamodel.Survey;
+import org.openforis.idm.metamodel.validation.Validator;
+import org.openforis.idm.metamodel.xml.InvalidIdmlException;
+import org.openforis.idm.metamodel.xml.SurveyUnmarshaller;
+import org.openforis.idm.model.expression.ExpressionFactory;
 import org.openforis.idm.util.CollectionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,17 +36,38 @@ import org.springframework.transaction.annotation.Transactional;
 public class SurveyManager {
 
 	@Autowired
+	private ExpressionFactory expressionFactory;
+	
+	@Autowired
+	private Validator validator;
+	
+	@Autowired
 	private SurveyDao surveyDao;
 	
-	private Map<String, CollectSurvey> surveysByName;
-	private Map<Integer, CollectSurvey> surveysById;
 	private List<CollectSurvey> surveys;
+	private Map<Integer, CollectSurvey> surveysById;
+	private Map<String, CollectSurvey> surveysByName;
+	private Map<String, CollectSurvey> surveysByUri;
 
 	public SurveyManager() {
 		surveysById = new HashMap<Integer, CollectSurvey>();
 		surveysByName = new HashMap<String, CollectSurvey>();
+		surveysByUri = new HashMap<String, CollectSurvey>();
 	}
 
+	@Transactional
+	protected void init() {
+		surveys = surveyDao.loadAll();
+		for (CollectSurvey survey : surveys) {
+			initSurvey(survey);
+		}
+	}
+
+	private void initSurvey(CollectSurvey survey) {
+		surveysById.put(survey.getId(), survey);
+		surveysByName.put(survey.getName(), survey);
+		surveysByUri.put(survey.getUri(), survey);
+	}
 	public List<CollectSurvey> getAll() {
 		return CollectionUtil.unmodifiableList(surveys);
 	}
@@ -47,7 +77,13 @@ public class SurveyManager {
 		CollectSurvey survey = surveysByName.get(name);
 		return survey;
 	}
-
+	
+	@Transactional
+	public CollectSurvey getByUri(String uri) {
+		CollectSurvey survey = surveysByUri.get(uri);
+		return survey;
+	}
+	
 	@Transactional
 	public void importModel(CollectSurvey survey) throws SurveyImportException {
 		surveyDao.importModel(survey);
@@ -84,6 +120,20 @@ public class SurveyManager {
 		}
 	}
 
+	public CollectSurvey unmarshalSurvey(InputStream is) throws InvalidIdmlException {
+		CollectSurveyContext surveyContext = new CollectSurveyContext(expressionFactory, validator, null);
+		CollectIdmlBindingContext idmlBindingContext = new CollectIdmlBindingContext(surveyContext);
+		SurveyUnmarshaller surveyUnmarshaller = idmlBindingContext.createSurveyUnmarshaller();
+		try {
+			byte[] bytes = IOUtils.toByteArray(is);
+			surveyUnmarshaller.validateAgainstSchema(bytes);
+			CollectSurvey survey = (CollectSurvey) surveyUnmarshaller.unmarshal(bytes);
+			return survey;
+		} catch (IOException e) {
+			throw new InvalidIdmlException("Error reading input stream");
+		}
+	}
+	
 	private String getProjectName(Survey survey, String lang) {
 		List<LanguageSpecificText> names = survey.getProjectNames();
 		if (names == null || names.size() == 0) {
@@ -98,19 +148,6 @@ public class SurveyManager {
 			}
 		}
 		return "";
-	}
-
-	@Transactional
-	protected void init() {
-		surveys = surveyDao.loadAll();
-		for (CollectSurvey survey : surveys) {
-			initSurvey(survey);
-		}
-	}
-
-	private void initSurvey(CollectSurvey survey) {
-		surveysById.put(survey.getId(), survey);
-		surveysByName.put(survey.getName(), survey);
 	}
 
 }

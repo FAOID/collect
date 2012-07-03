@@ -4,7 +4,6 @@ import static org.openforis.collect.persistence.jooq.Sequences.OFC_SURVEY_ID_SEQ
 import static org.openforis.collect.persistence.jooq.tables.OfcRecord.OFC_RECORD;
 import static org.openforis.collect.persistence.jooq.tables.OfcSurvey.OFC_SURVEY;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -80,8 +79,6 @@ public class SurveyDao extends JooqDaoSupport {
 				.execute();
 
 		survey.setId(surveyId);
-
-		//insertNodeDefinitions(survey);
 	}
 
 	public Survey load(int id) {
@@ -89,9 +86,6 @@ public class SurveyDao extends JooqDaoSupport {
 		Record record = jf.select().from(OFC_SURVEY)
 				.where(OFC_SURVEY.ID.equal(id)).fetchOne();
 		Survey survey = processSurveyRow(record);
-		if (survey != null) {
-			//loadNodeDefinitions(survey);
-		}
 		return survey;
 	}
 
@@ -100,12 +94,17 @@ public class SurveyDao extends JooqDaoSupport {
 		Record record = jf.select().from(OFC_SURVEY)
 				.where(OFC_SURVEY.NAME.equal(name)).fetchOne();
 		CollectSurvey survey = processSurveyRow(record);
-		if (survey != null) {
-			//loadNodeDefinitions(survey);
-		}
 		return survey;
 	}
 
+	public CollectSurvey loadByUri(String uri) {
+		Factory jf = getJooqFactory();
+		Record record = jf.select().from(OFC_SURVEY)
+				.where(OFC_SURVEY.URI.equal(uri)).fetchOne();
+		CollectSurvey survey = processSurveyRow(record);
+		return survey;
+	}
+	
 	@Transactional
 	public List<CollectSurvey> loadAll() {
 		Factory jf = getJooqFactory();
@@ -139,11 +138,10 @@ public class SurveyDao extends JooqDaoSupport {
 
 	private Survey unmarshalIdml(String idml) throws IOException {
 		byte[] bytes = idml.getBytes("UTF-8");
-		ByteArrayInputStream is = new ByteArrayInputStream(bytes);
 		SurveyUnmarshaller su = bindingContext.createSurveyUnmarshaller();
 		CollectSurvey survey;
 		try {
-			survey = (CollectSurvey) su.unmarshal(is);
+			survey = (CollectSurvey) su.unmarshal(bytes);
 		} catch (InvalidIdmlException e) {
 			throw new DataInconsistencyException("Invalid idm");
 		}
