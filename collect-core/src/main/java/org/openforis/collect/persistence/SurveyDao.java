@@ -207,7 +207,19 @@ public class SurveyDao extends JooqDaoSupport {
 					.execute();
 			survey.setId(surveyId);
 		} else {
-			Record record = result.get(0);			
+			
+			// validate things
+			Schema schema = survey.getSchema();
+			Collection<NodeDefinition> definitions = schema.getAllDefinitions();
+			System.out.println("Enumerating all nodeDefinition.");
+			for (NodeDefinition definition : definitions) {
+				String path = definition.getPath();
+				System.out.println(definition.getId() + ":" + path);
+				
+			}
+			
+			
+			Record record = result.get(0);
 			surveyId = record.getValueAsInteger(OFC_SURVEY.ID);			
 			survey.setId(surveyId);
 			System.out.println("    Survey " +  name + " exist. Updating with ID = " + surveyId );
@@ -216,17 +228,6 @@ public class SurveyDao extends JooqDaoSupport {
 					.set(OFC_SURVEY.NAME, survey.getName())
 					.set(OFC_SURVEY.URI, survey.getUri())
 					.where(OFC_SURVEY.ID.equal(survey.getId())).execute();
-		}
-		
-		// Insert SCHEMA_DEFINITIONs for new Fields only
-		Schema schema = survey.getSchema();
-		Collection<NodeDefinition> definitions = schema.getAllDefinitions();
-		System.out.println("Enumerating all nodeDefinition.");
-		for (NodeDefinition definition : definitions) {
-			String path = definition.getPath();
-			System.out.println(definition.getId() + ":" + path);
-		}
-
-				
+		}				
 	}
 }
