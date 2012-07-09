@@ -1,8 +1,5 @@
 package org.openforis.collect.presenter {
-	/**
-	 * 
-	 * @author S. Ricci
-	 * */
+
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.events.TimerEvent;
@@ -27,7 +24,7 @@ package org.openforis.collect.presenter {
 	import org.openforis.collect.metamodel.proxy.EntityDefinitionProxy;
 	import org.openforis.collect.model.CollectRecord$Step;
 	import org.openforis.collect.model.NodeItem;
-	import org.openforis.collect.remoting.service.export.DataExportState;
+	import org.openforis.collect.remoting.service.dataExport.DataExportState;
 	import org.openforis.collect.ui.component.DataExportPopUp;
 	import org.openforis.collect.ui.component.PopUp;
 	import org.openforis.collect.util.AlertUtil;
@@ -113,7 +110,7 @@ package org.openforis.collect.presenter {
 						if ( step == null ) {
 							AlertUtil.showError("export.error.selectStep");
 						} else {
-							stepNumber = DataClient.getRecordStepNumber(CollectRecord$Step(step));
+							stepNumber = Application.getRecordStepNumber(CollectRecord$Step(step));
 							var entityId:int = selectedEntity.id;
 							ClientFactory.dataExportClient.export(_exportResponder, rootEntity, stepNumber, entityId);
 							
@@ -126,7 +123,7 @@ package org.openforis.collect.presenter {
 					step = DataExportPopUp(_view).stepDropDownList.selectedItem;
 					var stepNums:Array;
 					if ( step != ALL_STEPS_ITEM ) {
-						stepNumber = DataClient.getRecordStepNumber(CollectRecord$Step(step));
+						stepNumber = Application.getRecordStepNumber(CollectRecord$Step(step));
 						stepNums = [stepNumber];
 					} else {
 						stepNums = [1, 2, 3];

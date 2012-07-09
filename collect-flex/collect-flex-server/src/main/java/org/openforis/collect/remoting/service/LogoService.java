@@ -4,7 +4,6 @@
 package org.openforis.collect.remoting.service;
 
 import org.openforis.collect.manager.LogoManager;
-import org.openforis.collect.model.Logo;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -17,11 +16,6 @@ public class LogoService {
 
 	public byte[] loadLogo(int id) {
 		return logoManager.loadLogo(id);
-	}
-	
-	public void storeLogo(Logo logo)
-	{
-		logoManager.storeLogo(logo);
 	}
 
 }

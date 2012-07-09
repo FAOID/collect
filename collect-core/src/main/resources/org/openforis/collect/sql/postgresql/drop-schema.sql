@@ -10,8 +10,6 @@ DROP SEQUENCE "collect"."ofc_user_role_id_seq";
 --- BEGIN GENERATED CODE ---
 ----------------------------
 
-ALTER TABLE "collect"."ofc_record"
-	DROP CONSTRAINT "ofc_record_root_entity_definition_fkey" CASCADE;
 ALTER TABLE "collect"."ofc_taxon_vernacular_name"
 	DROP CONSTRAINT "ofc_taxon_vernacular_name_taxon_fkey" CASCADE;
 ALTER TABLE "collect"."ofc_taxon"
@@ -28,7 +26,8 @@ ALTER TABLE "collect"."ofc_survey"
 	DROP CONSTRAINT "ofc_survey_name_key" CASCADE;
 ALTER TABLE "collect"."ofc_survey"
 	DROP CONSTRAINT "ofc_survey_uri_key" CASCADE;
-
+ALTER TABLE "collect"."ofc_taxon"
+	DROP CONSTRAINT "ofc_taxon_id_key" CASCADE;
 ALTER TABLE "collect"."ofc_taxonomy"
 	DROP CONSTRAINT "ofc_taxonomy_name_key" CASCADE;
 

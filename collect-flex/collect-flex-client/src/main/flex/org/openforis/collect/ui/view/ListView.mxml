@@ -15,7 +15,9 @@
 			import mx.collections.ArrayCollection;
 			import mx.events.FlexEvent;
 			
+			import org.openforis.collect.Application;
 			import org.openforis.collect.i18n.Message;
+			import org.openforis.collect.model.proxy.UserProxy;
 			import org.openforis.collect.presenter.ListPresenter;
 			
 			public static const DEFAULT_STATE:String = "default";
@@ -72,7 +74,9 @@
 		
 	</s:Group>
 	
-	<s:HGroup id="controlsBar" width="100%" horizontalAlign="center" verticalAlign="bottom" height="30">
+	<s:HGroup id="controlsBar" width="100%" horizontalAlign="center" verticalAlign="bottom" 
+			  height="30" 
+			  gap="10">
 		<s:Button id="addButton" label="{Message.get('list.add')}" 
 				  useHandCursor="true" buttonMode="true" 
 				  enabled.inactive="false" />
@@ -85,5 +89,17 @@
 		<s:Button id="exportButton" label="{Message.get('list.export')}" 
 				  useHandCursor="true" buttonMode="true" 
 				  enabled.inactive="false" />
+		
+		<mx:PopUpMenuButton id="adminSettingsButton"
+							openAlways="true"
+							toolTip="{Message.get('list.adminSettings')}" 
+							useHandCursor="true" buttonMode="true" 
+							enabled.inactive="false"
+							styleName="settings"
+							visible="{Application.user.hasRole(UserProxy.ROLE_ADMIN)}"
+							arrowButtonWidth="20"
+							width="20"
+							/>
+		
 	</s:HGroup>
 </s:Group>

@@ -12,10 +12,10 @@ import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openforis.collect.model.CollectRecord;
+import org.openforis.collect.model.CollectRecord.State;
 import org.openforis.collect.model.CollectSurvey;
 import org.openforis.collect.model.FieldSymbol;
 import org.openforis.collect.model.User;
-import org.openforis.collect.model.CollectRecord.State;
 import org.openforis.idm.metamodel.EntityDefinition;
 import org.openforis.idm.metamodel.NodeDefinition;
 import org.openforis.idm.metamodel.Schema;
@@ -44,7 +44,6 @@ public class DataHandler extends DefaultHandler {
 	private static final String ATTRIBUTE_STATE = "state";
 	private static final String ATTRIBUTE_SYMBOL = "symbol";
 	private static final String ATTRIBUTE_REMARKS = "remarks";
-	private static final String ATTRIBUTE_DEFINITION_ID = "defn";
 	
 	private CollectRecord record;
 	protected Node<?> node;
@@ -54,13 +53,19 @@ public class DataHandler extends DefaultHandler {
 	private List<String> warnings;
 	private StringBuilder content;
 	protected Attributes attributes;
-	private CollectSurvey survey;
+	private CollectSurvey recordSurvey;
+	private CollectSurvey currentSurvey;
 	private int ignoreLevels;
 	
 	private Map<String, User> users;
 	
 	public DataHandler(CollectSurvey survey, Map<String, User> users) {
-		this.survey = survey;
+		this(survey, survey, users);
+	}
+	
+	public DataHandler(CollectSurvey currentSurvey, CollectSurvey recordSurvey, Map<String, User> users) {
+		this.currentSurvey = currentSurvey;
+		this.recordSurvey = recordSurvey;
 		this.users = users;
 	}
 
@@ -118,7 +123,7 @@ public class DataHandler extends DefaultHandler {
 	}
 
 	public void startRecord(String localName, Attributes attributes) {
-		Schema schema = survey.getSchema();
+		Schema schema = currentSurvey.getSchema();
 		EntityDefinition defn = schema.getRootEntityDefinition(localName);
 		if ( defn == null ) {
 			fail("Unknown root entity: "+localName);
@@ -127,12 +132,11 @@ public class DataHandler extends DefaultHandler {
 			if ( StringUtils.isBlank(version) ) {
 				fail("Missing version number");
 			} else {
-				record = new CollectRecord(survey, version);
-				
+				record = new CollectRecord(currentSurvey, version);
 				String stateAttr = attributes.getValue(ATTRIBUTE_STATE);
 				State state = State.fromCode(stateAttr);
 				record.setState(state);
-				
+
 				Date created = parseDateTime(attributes.getValue(ATTRIBUTE_DATE_CREATED));
 				Date modified = parseDateTime(attributes.getValue(ATTRIBUTE_DATE_MODIFIED));
 				record.setCreationDate(created);
@@ -167,19 +171,14 @@ public class DataHandler extends DefaultHandler {
 		}
 	}
 
-	private NodeDefinition getNodeDefinition(Entity entity, String localName, Attributes attributes) {
-		EntityDefinition entityDefn = entity.getDefinition();
-		Schema schema = entityDefn.getSchema();
-		NodeDefinition defn = null;
-		String childDefnIdStr = attributes.getValue(ATTRIBUTE_DEFINITION_ID);
-		if ( StringUtils.isNotBlank(childDefnIdStr) ) {
-			int childDefnId = Integer.parseInt(childDefnIdStr);
-			defn = schema.getById(childDefnId);
-		} else {
-			//compatibility with previous version of data marshaller
-			defn = entityDefn.getChildDefinition(localName);
-		}
-		return defn;
+	private NodeDefinition getNodeDefinition(Entity parentEntity, String localName, Attributes attributes) {
+		EntityDefinition parentEntityDefn = parentEntity.getDefinition();
+		Schema originalSchema = recordSurvey.getSchema();
+		EntityDefinition originlParentEntityDefn = (EntityDefinition) originalSchema.getById(parentEntityDefn.getId());
+		NodeDefinition originalDefn = originlParentEntityDefn.getChildDefinition(localName);
+		Schema newSchema = currentSurvey.getSchema();
+		NodeDefinition newDefn = newSchema.getById(originalDefn.getId());
+		return newDefn;
 	}
 	
 	protected void startAttributeField(String localName, Attributes attributes) {

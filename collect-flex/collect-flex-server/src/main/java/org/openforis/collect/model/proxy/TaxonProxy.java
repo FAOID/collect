@@ -3,6 +3,7 @@ package org.openforis.collect.model.proxy;
 import org.granite.messaging.amf.io.util.externalizer.annotation.ExternalizedProperty;
 import org.openforis.collect.Proxy;
 import org.openforis.idm.model.species.Taxon;
+import org.openforis.idm.model.species.Taxon.TaxonRank;
 
 /**
  * 
@@ -44,8 +45,8 @@ public class TaxonProxy implements Proxy {
 	}
 
 	@ExternalizedProperty
-	public String getTaxonomicRank() {
-		return taxon.getTaxonomicRank();
+	public TaxonRank getTaxonRank() {
+		return taxon.getTaxonRank();
 	}
 
 	@ExternalizedProperty

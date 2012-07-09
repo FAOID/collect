@@ -91,7 +91,7 @@ mx|Alert {
 
 }*/
 
-component|BlockingMessagePopUp, component|SelectVersionPopUp, input|CodeListDialog, component|DataExportPopUp, component|BackupPopUp {
+component|BlockingMessagePopUp, component|SelectVersionPopUp, input|CodeListDialog, component|DataExportPopUp, component|BackupPopUp, component|DataImportPopUp {
 	skin-class: ClassReference("org.openforis.collect.ui.skin.TitleWindowSkin");
 	title-style-name: dialogHeaderStyle;
 	border-color: #000000;
@@ -153,6 +153,7 @@ detail|AttributeItemRenderer {
 
 detail|MultipleAttributeFormItem s|BorderContainer, 
 	detail|SingleEntityFormItem s|BorderContainer,
+	detail|MultipleEntityFormItem s|BorderContainer,
 	detail|MultipleEntityAsTableFormItem s|BorderContainer  {
 	borderColor: #FFFFFF;
 	borderWeight: 1;
@@ -294,3 +295,6 @@ s|Label.dataGroupHeader {
 	fontSize: 14;
 }
 
+mx|PopUpMenuButton.settings {
+	popUpIcon: Embed(source='assets/images/settings.png');
+}

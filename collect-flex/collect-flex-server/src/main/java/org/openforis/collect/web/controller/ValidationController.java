@@ -11,10 +11,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.openforis.collect.manager.RecordManager;
 import org.openforis.collect.manager.SurveyManager;
 import org.openforis.collect.model.CollectRecord;
+import org.openforis.collect.model.CollectRecord.Step;
 import org.openforis.collect.model.CollectSurvey;
-import org.openforis.collect.persistence.RecordDao;
+import org.openforis.collect.model.User;
+import org.openforis.collect.web.session.SessionState;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,12 +31,11 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  */
 @Controller
-public class ValidationController {
+public class ValidationController extends BasicController {
 	private static Log LOG = LogFactory.getLog(ValidationController.class);
 	
 	@Autowired
-	//private RecordManager recordManager;
-	private RecordDao recordDao;
+	private RecordManager recordManager;
 	
 	@Autowired
 	private SurveyManager surveyManager;
@@ -46,15 +48,16 @@ public class ValidationController {
 				outputStream.println("Wrong parameters: please specify 's' (survey) and 'r' (root entity name).");
 				return;
 			}
-			//SessionState sessionState = getSessionState(request);
+			SessionState sessionState = getSessionState(request);
+			User user = sessionState.getUser();
+			String sessionId = sessionState.getSessionId();
 			print(outputStream, "Starting validation of all records: ");
 			CollectSurvey survey = surveyManager.get(s);
 			if ( survey == null ) {
 				print(outputStream, "Survey not found");
 				return;
 			}
-			//List<CollectRecord> summaries = recordManager.loadSummaries(survey, r, (String) null);
-			List<CollectRecord> summaries = recordDao.loadSummaries(survey, r, (String) null);
+			List<CollectRecord> summaries = recordManager.loadSummaries(survey, r, (String) null);
 			if ( summaries != null ) {
 				print(outputStream, "Records to validate: " + summaries.size());
 				for (CollectRecord summary : summaries) {
@@ -62,17 +65,8 @@ public class ValidationController {
 					long start = System.currentTimeMillis();
 					print(outputStream, "Start validating record: " + recordKey);
 					Integer id = summary.getId();
-					int stepNumber = summary.getStep().getStepNumber();
-					/*
-					String sessionId = sessionState.getSessionId();
-					User user = sessionState.getUser();
-					CollectRecord record = recordManager.checkout(survey, user, id, stepNumber, sessionId, true);
-					recordManager.save(record, sessionId);
-					 */
-					CollectRecord record = recordDao.load(survey, id, stepNumber);
-					record.updateDerivedStates();
-					recordDao.update(record);
-					//recordManager.releaseLock(id);
+					Step step = summary.getStep();
+					recordManager.validate(survey, user, sessionId, id, step);
 					long elapsedMillis = System.currentTimeMillis() - start;
 					print(outputStream, "Validation of record " + recordKey + " completed in " + elapsedMillis + " millis");
 				}
@@ -84,20 +78,7 @@ public class ValidationController {
 			throw new RuntimeException(e);
 		}
 	}
-	/*
-	private SessionState getSessionState(HttpServletRequest request) {
-		HttpSession session = request.getSession();
-		SessionState sessionState = null;
-		if(session != null) {
-			sessionState = (SessionState) session.getAttribute(SessionState.SESSION_ATTRIBUTE_NAME);
-		}
-		if ( sessionState == null ) {
-			throw new RuntimeException("Invalid session or user not correctly logged in");
-		} else {
-			return sessionState;
-		}
-	}
-	*/
+	
 	private void print(ServletOutputStream outputStream, String message) throws IOException {
 		outputStream.println(message);
 		outputStream.flush();

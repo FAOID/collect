@@ -54,7 +54,10 @@ package org.openforis.collect.util {
 	import org.openforis.collect.model.proxy.ValidationResultProxy;
 	import org.openforis.collect.model.proxy.ValidationResultsProxy;
 	import org.openforis.collect.remoting.service.UpdateResponse;
-	import org.openforis.collect.remoting.service.export.DataExportState;
+	import org.openforis.collect.remoting.service.dataExport.DataExportState;
+	import org.openforis.collect.remoting.service.dataImport.DataImportStateProxy;
+	import org.openforis.collect.remoting.service.dataImport.DataImportSummaryItemProxy;
+	import org.openforis.collect.remoting.service.dataImport.DataImportSummaryProxy;
 	import org.openforis.idm.metamodel.validation.ValidationResultFlag;
 
 	public class ModelClassInitializer {
@@ -80,6 +83,9 @@ package org.openforis.collect.util {
 				CoordinateAttributeDefinitionProxy,
 				CoordinateProxy,
 				DataExportState,
+				DataImportStateProxy,
+				DataImportSummaryProxy,
+				DataImportSummaryItemProxy,
 				DateAttributeDefinitionProxy,
 				DateProxy,
 				EntityDefinitionProxy,

@@ -22,11 +22,4 @@ public class LogoManager {
 		Logo logo = logoDao.loadById(id);
 		return logo.getImage();
 	}
-	
-	@Transactional
-	public void storeLogo(Logo logo) {		
-		logoDao.delete(logo.getPosition());
-		logoDao.insert(logo);
-		
-	}
 }
