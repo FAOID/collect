@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -22,12 +23,18 @@ import org.openforis.collect.model.CollectSurvey;
 import org.openforis.collect.model.CollectSurveyContext;
 import org.openforis.collect.persistence.jooq.JooqDaoSupport;
 import org.openforis.collect.persistence.xml.CollectIdmlBindingContext;
+import org.openforis.idm.metamodel.EntityDefinition;
 import org.openforis.idm.metamodel.ExternalCodeListProvider;
+import org.openforis.idm.metamodel.NodeDefinition;
+import org.openforis.idm.metamodel.NumberAttributeDefinition;
+import org.openforis.idm.metamodel.Schema;
 import org.openforis.idm.metamodel.Survey;
 import org.openforis.idm.metamodel.validation.Validator;
 import org.openforis.idm.metamodel.xml.InvalidIdmlException;
 import org.openforis.idm.metamodel.xml.SurveyMarshaller;
 import org.openforis.idm.metamodel.xml.SurveyUnmarshaller;
+import org.openforis.idm.model.RealAttribute;
+import org.openforis.idm.model.Value;
 import org.openforis.idm.model.expression.ExpressionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -188,14 +195,14 @@ public class SurveyDao extends JooqDaoSupport {
 		return bindingContext;
 	}
 
-	public void updateModel(CollectSurvey survey) throws SurveyImportException {
-		String name = survey.getName();
+	public void updateModel(CollectSurvey newSurvey) throws SurveyImportException {
+		String name = newSurvey.getName();
 		if (StringUtils.isBlank(name)) {
 			throw new SurveyImportException(
 					"Survey name must be set before importing");
 		}
 
-		String idml = marshalSurvey(survey);
+		String idml = marshalSurvey(newSurvey);
 
 		// Get OFC_SURVEY table id for name
 		Factory jf = getJooqFactory();
@@ -210,21 +217,63 @@ public class SurveyDao extends JooqDaoSupport {
 			surveyId = jf.nextval(OFC_SURVEY_ID_SEQ).intValue();
 			System.out.println("    Survey " +  name + " not exist. Inserting with ID = " + surveyId );
 			jf.insertInto(OFC_SURVEY).set(OFC_SURVEY.ID, surveyId)
-					.set(OFC_SURVEY.NAME, survey.getName())
-					.set(OFC_SURVEY.URI, survey.getUri())
+					.set(OFC_SURVEY.NAME, newSurvey.getName())
+					.set(OFC_SURVEY.URI, newSurvey.getUri())
 					.set(OFC_SURVEY.IDML, Factory.val(idml, SQLDataType.CLOB))
 					.execute();
-			survey.setId(surveyId);
+			newSurvey.setId(surveyId);
 		} else {
+			
+			//load old-first survey
+			List<CollectSurvey> listOldSurvey = loadAll();
+			CollectSurvey oldSurvey;
+			Schema oldSchema;
+			Collection<NodeDefinition> oldDefinitions;			
+			if(listOldSurvey.size()==1){
+				oldSurvey = listOldSurvey.get(0);
+				oldSchema = oldSurvey.getSchema();
+				oldDefinitions = oldSchema.getAllDefinitions();
+			}else if(listOldSurvey.size()>1){
+				throw new SurveyImportException("Multiple survey not supported yet");
+			}else{
+				throw new SurveyImportException("No existing survey in the database");
+			}
+			
+			// validate things
+			Schema newSchema = newSurvey.getSchema();
+			Collection<NodeDefinition> definitions = newSchema.getAllDefinitions();
+			System.out.println("Enumerating all nodeDefinition.");
+			for (NodeDefinition newDefinition : definitions) {
+				String path = newDefinition.getPath();				
+				NodeDefinition oldDefinition = oldSchema.getById(newDefinition.getId());				
+				if(!newDefinition.getClass().equals(oldDefinition.getClass()))
+				{
+					throw new SurveyImportException("Can not change node type '" + newDefinition.getName() + "' from " + oldDefinition.getClass() + " to " + newDefinition.getClass());
+				}else{					
+					if(newDefinition instanceof NumberAttributeDefinition){						
+						NumberAttributeDefinition newNum = (NumberAttributeDefinition) newDefinition;
+						Class<? extends Value> newSubType = newNum.getValueType();
+						
+						NumberAttributeDefinition oldNum = (NumberAttributeDefinition) oldDefinition;
+						Class<? extends Value> oldSubType = oldNum.getValueType();
+						
+						if(!oldSubType.equals(newSubType)){
+							throw new SurveyImportException("[SUBTYPE] Can not change node type '" + newDefinition.getName() + "' from " + oldDefinition.getClass() + " to " + newDefinition.getClass());
+						}
+					}
+				}
+			}
+
+						
 			Record record = result.get(0);			
 			surveyId = record.getValueAsInteger(OFC_SURVEY.ID);			
-			survey.setId(surveyId);
+			newSurvey.setId(surveyId);
 			System.out.println("    Survey " +  name + " exist. Updating with ID = " + surveyId );
 			jf.update(OFC_SURVEY)
 					.set(OFC_SURVEY.IDML, Factory.val(idml, SQLDataType.CLOB))
-					.set(OFC_SURVEY.NAME, survey.getName())
-					.set(OFC_SURVEY.URI, survey.getUri())
-					.where(OFC_SURVEY.ID.equal(survey.getId())).execute();
+					.set(OFC_SURVEY.NAME, newSurvey.getName())
+					.set(OFC_SURVEY.URI, newSurvey.getUri())
+					.where(OFC_SURVEY.ID.equal(newSurvey.getId())).execute();
 		}
 
 	}
