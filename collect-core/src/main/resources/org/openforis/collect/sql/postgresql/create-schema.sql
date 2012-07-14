@@ -41,6 +41,8 @@ CREATE TABLE "collect"."ofc_record"  (
 	"key1"                     	varchar(2048) NULL,
 	"key2"                     	varchar(2048) NULL,
 	"key3"                     	varchar(2048) NULL,
+    "key4"                     	varchar(2048) NULL,
+    "key5"                     	varchar(2048) NULL,
 	"count1"                   	integer NULL,
 	"count2"                   	integer NULL,
 	"count3"                   	integer NULL,

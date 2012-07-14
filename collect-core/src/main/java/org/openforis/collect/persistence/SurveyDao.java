@@ -246,7 +246,7 @@ public class SurveyDao extends JooqDaoSupport {
 			for (NodeDefinition newDefinition : definitions) {
 				String path = newDefinition.getPath();				
 				NodeDefinition oldDefinition = oldSchema.getById(newDefinition.getId());				
-				if(!newDefinition.getClass().equals(oldDefinition.getClass()))
+				if(oldDefinition!=null && !newDefinition.getClass().equals(oldDefinition.getClass()))
 				{
 					throw new SurveyImportException("Can not change node type '" + newDefinition.getName() + "' from " + oldDefinition.getClass() + " to " + newDefinition.getClass());
 				}else{					

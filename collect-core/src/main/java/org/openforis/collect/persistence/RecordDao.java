@@ -39,20 +39,21 @@ import org.springframework.transaction.annotation.Transactional;
  * @author G. Miceli
  * @author M. Togna
  * @author S. Ricci
+ * @author E. Wibowo
  */
 @SuppressWarnings("rawtypes")
 @Transactional
 public class RecordDao extends MappingJooqDaoSupport<CollectRecord, JooqFactory> {
 	
 	private static final TableField[] KEY_FIELDS = 
-		{OFC_RECORD.KEY1, OFC_RECORD.KEY2, OFC_RECORD.KEY3, OFC_RECORD.KEY4};
+		{OFC_RECORD.KEY1, OFC_RECORD.KEY2, OFC_RECORD.KEY3, OFC_RECORD.KEY4, OFC_RECORD.KEY5};
 	private static final TableField[] COUNT_FIELDS = 
 		{OFC_RECORD.COUNT1, OFC_RECORD.COUNT2, OFC_RECORD.COUNT3, OFC_RECORD.COUNT4, OFC_RECORD.COUNT5};
 	private static final TableField[] SUMMARY_FIELDS = 
 		{OFC_RECORD.DATE_CREATED, OFC_RECORD.CREATED_BY_ID, OFC_RECORD.DATE_MODIFIED, OFC_RECORD.ERRORS, OFC_RECORD.ID, 
 	     OFC_RECORD.MISSING, OFC_RECORD.MODEL_VERSION, OFC_RECORD.MODIFIED_BY_ID, 
 	     OFC_RECORD.ROOT_ENTITY_DEFINITION_ID, OFC_RECORD.SKIPPED, OFC_RECORD.STATE, OFC_RECORD.STEP, OFC_RECORD.SURVEY_ID, 
-	     OFC_RECORD.WARNINGS, OFC_RECORD.KEY1, OFC_RECORD.KEY2, OFC_RECORD.KEY3, OFC_RECORD.KEY4,
+	     OFC_RECORD.WARNINGS, OFC_RECORD.KEY1, OFC_RECORD.KEY2, OFC_RECORD.KEY3, OFC_RECORD.KEY4, OFC_RECORD.KEY5,
 	     OFC_RECORD.COUNT1, OFC_RECORD.COUNT2, OFC_RECORD.COUNT3, OFC_RECORD.COUNT4, OFC_RECORD.COUNT5};
 
 	public RecordDao() {
@@ -163,6 +164,9 @@ public class RecordDao extends MappingJooqDaoSupport<CollectRecord, JooqFactory>
 				break;
 			case KEY4:
 				orderBy = OFC_RECORD.KEY4;
+				break;
+			case KEY5:
+				orderBy = OFC_RECORD.KEY5;
 				break;
 			case COUNT1:
 				orderBy = OFC_RECORD.COUNT1;
