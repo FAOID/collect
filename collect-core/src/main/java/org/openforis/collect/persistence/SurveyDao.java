@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -23,7 +24,6 @@ import org.openforis.collect.model.CollectSurvey;
 import org.openforis.collect.model.CollectSurveyContext;
 import org.openforis.collect.persistence.jooq.JooqDaoSupport;
 import org.openforis.collect.persistence.xml.CollectIdmlBindingContext;
-import org.openforis.idm.metamodel.EntityDefinition;
 import org.openforis.idm.metamodel.ExternalCodeListProvider;
 import org.openforis.idm.metamodel.NodeDefinition;
 import org.openforis.idm.metamodel.NumberAttributeDefinition;
@@ -33,7 +33,6 @@ import org.openforis.idm.metamodel.validation.Validator;
 import org.openforis.idm.metamodel.xml.InvalidIdmlException;
 import org.openforis.idm.metamodel.xml.SurveyMarshaller;
 import org.openforis.idm.metamodel.xml.SurveyUnmarshaller;
-import org.openforis.idm.model.RealAttribute;
 import org.openforis.idm.model.Value;
 import org.openforis.idm.model.expression.ExpressionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -277,14 +276,29 @@ public class SurveyDao extends JooqDaoSupport {
 			}
 			
 			
+			HashMap<Integer, NodeDefinition> hashOldDefinitions = new HashMap<Integer, NodeDefinition>();
+			for (NodeDefinition oldDefinition : oldDefinitions) {
+				hashOldDefinitions.put(oldDefinition.getId(), oldDefinition);
+			}
+			
+			for (NodeDefinition newDefinition : newDefinitions) {
+				if(hashOldDefinitions.containsKey(newDefinition.getId()))
+				{
+					hashOldDefinitions.remove(newDefinition.getId());
+				}
+			}
+			
+			if(hashOldDefinitions.size()>0)
+			{
+				throw new SurveyImportException(hashOldDefinitions.size() + " node deleted. Deleting of node is not yet supported");
+			}
+			
+			
 			
 			// validate things
-			
-			
 			System.out.println("Enumerating all new nodeDefinition");
 			for (NodeDefinition newDefinition : newDefinitions) {
 				String path = newDefinition.getPath();				
-				System.out.println(path);
 				NodeDefinition oldDefinition = oldSchema.getById(newDefinition.getId());				
 				if(oldDefinition!=null && !newDefinition.getClass().equals(oldDefinition.getClass()))
 				{
@@ -303,6 +317,9 @@ public class SurveyDao extends JooqDaoSupport {
 					}
 				}
 			}
+			
+			// check for deleted node in new nodeDefinitions
+			
 
 						
 			Record record = result.get(0);			
