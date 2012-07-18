@@ -239,12 +239,52 @@ public class SurveyDao extends JooqDaoSupport {
 				throw new SurveyImportException("No existing survey in the database");
 			}
 			
-			// validate things
 			Schema newSchema = newSurvey.getSchema();
-			Collection<NodeDefinition> definitions = newSchema.getAllDefinitions();
-			System.out.println("Enumerating all nodeDefinition.");
-			for (NodeDefinition newDefinition : definitions) {
+			Collection<NodeDefinition> newDefinitions = newSchema.getAllDefinitions();
+			
+			//check root entity
+			NodeDefinition oldDefinitionRoot = null;
+			for (NodeDefinition oldDefinition : oldDefinitions) {
+				String path = oldDefinition.getPath();
+				int countOfSlash = StringUtils.countMatches(path, "/");
+				if(countOfSlash==1)
+				{
+					oldDefinitionRoot = oldDefinition;
+					break;
+				}
+			}
+			
+			NodeDefinition newDefinitionRoot = null;
+			for (NodeDefinition newDefinition : newDefinitions) {
+				String path = newDefinition.getPath();
+				int countOfSlash = StringUtils.countMatches(path, "/");
+				if(countOfSlash==1)
+				{
+					newDefinitionRoot = newDefinition;
+					break;
+				}
+			}
+			
+			System.out.println("Existing root entity :" + oldDefinitionRoot.getId() + " [" + oldDefinitionRoot.getName() + "]" );
+			System.out.println("New root entity :" + newDefinitionRoot.getId() + " [" + newDefinitionRoot.getName() + "]" );
+			if(newDefinitionRoot==null){
+				throw new SurveyImportException("No root definition defined for new IDM");
+			}
+			
+			if(newDefinitionRoot.getId().intValue()!=oldDefinitionRoot.getId().intValue())
+			{
+				throw new SurveyImportException("Root definition ID is different from old and new IDM. Please check it.");
+			}
+			
+			
+			
+			// validate things
+			
+			
+			System.out.println("Enumerating all new nodeDefinition");
+			for (NodeDefinition newDefinition : newDefinitions) {
 				String path = newDefinition.getPath();				
+				System.out.println(path);
 				NodeDefinition oldDefinition = oldSchema.getById(newDefinition.getId());				
 				if(oldDefinition!=null && !newDefinition.getClass().equals(oldDefinition.getClass()))
 				{
