@@ -20,6 +20,7 @@ import org.jooq.Result;
 import org.jooq.SelectConditionStep;
 import org.jooq.impl.Factory;
 import org.jooq.impl.SQLDataType;
+import org.openforis.collect.model.CollectRecord;
 import org.openforis.collect.model.CollectSurvey;
 import org.openforis.collect.model.CollectSurveyContext;
 import org.openforis.collect.persistence.jooq.JooqDaoSupport;
@@ -33,6 +34,7 @@ import org.openforis.idm.metamodel.validation.Validator;
 import org.openforis.idm.metamodel.xml.InvalidIdmlException;
 import org.openforis.idm.metamodel.xml.SurveyMarshaller;
 import org.openforis.idm.metamodel.xml.SurveyUnmarshaller;
+import org.openforis.idm.model.EntitySchema;
 import org.openforis.idm.model.Value;
 import org.openforis.idm.model.expression.ExpressionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +56,8 @@ public class SurveyDao extends JooqDaoSupport {
 	private Validator validator;
 	@Autowired
 	private ExternalCodeListProvider externalCodeListProvider;
+	@Autowired
+	private RecordDao recordDao;
 
 	public SurveyDao() {
 	}
@@ -290,7 +294,27 @@ public class SurveyDao extends JooqDaoSupport {
 			
 			if(hashOldDefinitions.size()>0)
 			{
-				throw new SurveyImportException(hashOldDefinitions.size() + " node deleted. Deleting of node is not yet supported");
+				//upgrade the data
+				List<CollectRecord> records = recordDao.loadSummaries(oldSurvey, "cluster", 0, Integer.MAX_VALUE, null, null);
+				System.out.println("Record size = " + records.size());
+				EntitySchema.hashDeleted.clear();
+				EntitySchema.hashDeleted = hashOldDefinitions;
+				
+				for(CollectRecord r:records)
+				{	
+					try {
+						System.out.println("Reading " + r.getId() + " using old definitions");
+						CollectRecord record = recordDao.load(oldSurvey, r.getId(), 1);
+						System.out.println("Writing " + r.getId() + " using new definitions");
+						recordDao.update(record);						
+					}catch(Exception e)
+					{
+						System.out.println("Error on Record ID "  + r.getId());
+						throw new SurveyImportException(hashOldDefinitions.size() + " node deleted. Deleting of node is not yet supported");
+					}
+				}
+				
+				EntitySchema.hashDeleted.clear();				
 			}
 			
 			
@@ -304,7 +328,7 @@ public class SurveyDao extends JooqDaoSupport {
 				{
 					throw new SurveyImportException("Can not change node type '" + newDefinition.getName() + "' from " + oldDefinition.getClass() + " to " + newDefinition.getClass());
 				}else{					
-					if(newDefinition instanceof NumberAttributeDefinition){						
+					if(newDefinition instanceof NumberAttributeDefinition && oldDefinition!=null){						
 						NumberAttributeDefinition newNum = (NumberAttributeDefinition) newDefinition;
 						Class<? extends Value> newSubType = newNum.getValueType();
 						
