@@ -296,16 +296,14 @@ public class SurveyDao extends JooqDaoSupport {
 			{
 				//upgrade the data
 				List<CollectRecord> records = recordDao.loadSummaries(oldSurvey, "cluster", 0, Integer.MAX_VALUE, null, null);
-				System.out.println("Record size = " + records.size());
+				System.out.println("Upgrading data after node deletion, record size = " + records.size());
 				EntitySchema.hashDeleted.clear();
 				EntitySchema.hashDeleted = hashOldDefinitions;
 				
 				for(CollectRecord r:records)
 				{	
 					try {
-						System.out.println("Reading " + r.getId() + " using old definitions");
 						CollectRecord record = recordDao.load(oldSurvey, r.getId(), 1);
-						System.out.println("Writing " + r.getId() + " using new definitions");
 						recordDao.update(record);						
 					}catch(Exception e)
 					{
