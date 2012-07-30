@@ -12,7 +12,10 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jooq.Record;
@@ -198,6 +201,7 @@ public class SurveyDao extends JooqDaoSupport {
 		return bindingContext;
 	}
 
+	@SuppressWarnings("unused")
 	public void updateModel(CollectSurvey newSurvey) throws SurveyImportException {
 		String name = newSurvey.getName();
 		if (StringUtils.isBlank(name)) {
@@ -279,7 +283,8 @@ public class SurveyDao extends JooqDaoSupport {
 				throw new SurveyImportException("Root definition ID is different from old and new IDM. Please check it.");
 			}
 			
-			
+
+			//check IDM for deleted nodes
 			HashMap<Integer, NodeDefinition> hashOldDefinitions = new HashMap<Integer, NodeDefinition>();
 			for (NodeDefinition oldDefinition : oldDefinitions) {
 				hashOldDefinitions.put(oldDefinition.getId(), oldDefinition);
@@ -297,6 +302,15 @@ public class SurveyDao extends JooqDaoSupport {
 				//upgrade the data
 				List<CollectRecord> records = recordDao.loadSummaries(oldSurvey, "cluster", 0, Integer.MAX_VALUE, null, null);
 				System.out.println("Upgrading data after node deletion, record size = " + records.size());
+				System.out.println(hashOldDefinitions.size() + " node deleted");
+				System.out.println("Deleted node contents : ");
+				Iterator<Entry<Integer, NodeDefinition>> nodeDeletedIterator = hashOldDefinitions.entrySet().iterator();				
+				while(nodeDeletedIterator.hasNext())
+				{
+					Entry<Integer, NodeDefinition> nodeDeleted = nodeDeletedIterator.next();
+					System.out.println(nodeDeleted.getKey() + " : " + nodeDeleted.getValue().getPath());
+				}
+
 				EntitySchema.hashDeleted.clear();
 				EntitySchema.hashDeleted = hashOldDefinitions;
 				
@@ -304,14 +318,13 @@ public class SurveyDao extends JooqDaoSupport {
 				{	
 					try {
 						CollectRecord record = recordDao.load(oldSurvey, r.getId(), 1);
+						System.out.println("\tUpdating Record ID " + record.getId());
 						recordDao.update(record);						
 					}catch(Exception e)
 					{
-						System.out.println("Error on Record ID "  + r.getId());
-						throw new SurveyImportException(hashOldDefinitions.size() + " node deleted. Deleting of node is not yet supported");
+						System.out.println("Error Updating Record ID "  + r.getId());						
 					}
 				}
-				
 				EntitySchema.hashDeleted.clear();				
 			}
 			
