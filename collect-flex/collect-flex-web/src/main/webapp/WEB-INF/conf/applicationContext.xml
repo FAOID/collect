@@ -111,7 +111,7 @@
 	<!-- Data Source -->
 	<!-- ===================================== -->
 	<bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
-		<property name="jndiName" value="java:comp/env/jdbc/collectDs"/>   
+		<property name="jndiName" value="java:comp/env/jdbc/desreDs"/>   
       	<property name="resourceRef" value="true" />
 	</bean>
 	

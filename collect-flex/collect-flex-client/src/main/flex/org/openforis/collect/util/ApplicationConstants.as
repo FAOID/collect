@@ -13,7 +13,7 @@ package org.openforis.collect.util {
 		public static const DEBUGGING:Boolean = CONFIG::debugging;
 		public static const VERSION:String = CONFIG::version;
 		
-		internal static const CONTEXT_NAME:String = "collect";
+		internal static const CONTEXT_NAME:String = "desre";
 
 		private static const DATA_IMPORT_UPLOAD_SERVLET_NAME:String = "uploadData.htm";
 		/*
@@ -38,7 +38,7 @@ package org.openforis.collect.util {
 		private static var _URL:String;
 		
 		{
-			setUrl("http://localhost:8080/collect/collect.swf");
+			setUrl("http://localhost:8080/desre/collect.swf");
 		}
 		
 		public static function init():void {

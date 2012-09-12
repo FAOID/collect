@@ -5,7 +5,7 @@ package org.openforis.collect.persistence.jooq.tables;
 
 import org.jooq.TableField;
 import org.jooq.impl.UpdatableTableImpl;
-import org.openforis.collect.persistence.jooq.Collect;
+import org.openforis.collect.persistence.jooq.Desre;
 import org.openforis.collect.persistence.jooq.tables.records.LookupRecord;
 
 /**
@@ -33,7 +33,7 @@ public class Lookup extends UpdatableTableImpl<LookupRecord> {
 	// }
 
 	private Lookup(String name) {
-		super(name, Collect.COLLECT);
+		super(name, Desre.DESRE);
 	}
 
 	public final org.jooq.TableField<LookupRecord, Integer> ID = createField("id", org.jooq.impl.SQLDataType.INTEGER, this);

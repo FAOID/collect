@@ -22,4 +22,9 @@ public class LogoManager {
 		Logo logo = logoDao.loadById(id);
 		return logo.getImage();
 	}
+
+	public void insertLogo(Logo logo) {
+		logoDao.insert(logo);
+		
+	}
 }

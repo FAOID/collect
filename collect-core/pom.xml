@@ -63,7 +63,7 @@
 							<name>org.jooq.util.postgres.PostgresDatabase</name>
 							<includes>.*</includes>
 							<excludes />
-							<inputSchema>collect</inputSchema>
+							<inputSchema>desre</inputSchema>
 						</database>
 						<generate>
 							<relations>true</relations>
