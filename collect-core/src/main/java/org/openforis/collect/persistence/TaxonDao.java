@@ -69,6 +69,21 @@ public class TaxonDao extends MappingJooqDaoSupport<Taxon, TaxonDao.JooqFactory>
 		return entities;
 	}
 	
+	protected List<Taxon> findStartingWithByTaxonRank(TableField<?,String> field, int taxonomyId, String searchString, int maxResults, String rank) {
+		JooqFactory jf = getMappingJooqFactory();
+		searchString = searchString.toUpperCase() + "%";
+		Select<?> query = 
+			jf.select()
+			.from(OFC_TAXON)
+			.where(OFC_TAXON.TAXONOMY_ID.equal(taxonomyId)
+				.and(JooqFactory.upper(field).like(searchString)
+				.and(OFC_TAXON.TAXON_RANK.equal(rank))))
+			.limit(maxResults);
+		Result<?> result = query.fetch();
+		List<Taxon> entities = jf.fromResult(result);
+		return entities;
+	}
+	
 	protected static class JooqFactory extends MappingJooqFactory<Taxon> {
 
 		private static final long serialVersionUID = 1L;
@@ -113,6 +128,10 @@ public class TaxonDao extends MappingJooqDaoSupport<Taxon, TaxonDao.JooqFactory>
 		protected Integer getId(Taxon t) {
 			return t.getSystemId();
 		}
+	}
+
+	public List<Taxon> findByScientificNameByTaxonRank(int taxonomyId, String searchString, int maxResults, String rank) {
+		return findStartingWithByTaxonRank(OFC_TAXON.SCIENTIFIC_NAME, taxonomyId, searchString, maxResults, rank);
 	}
 }
 

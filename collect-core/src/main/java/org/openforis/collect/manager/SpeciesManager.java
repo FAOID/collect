@@ -48,7 +48,7 @@ public class SpeciesManager {
 		List<Taxon> list = taxonDao.findByCode(taxonomy.getId(), searchString, maxResults);
 		List<TaxonOccurrence> result = new ArrayList<TaxonOccurrence>();
 		for (Taxon taxon : list) {
-			TaxonOccurrence o = new TaxonOccurrence(taxon.getCode(), taxon.getScientificName());
+			TaxonOccurrence o = new TaxonOccurrence(taxon.getSystemId(), taxon.getCode(), taxon.getScientificName());
 			result.add(o);
 		}
 		return result;
@@ -60,7 +60,7 @@ public class SpeciesManager {
 		List<Taxon> list = taxonDao.findByScientificName(taxonomy.getId(), searchString, maxResults);
 		List<TaxonOccurrence> result = new ArrayList<TaxonOccurrence>();
 		for (Taxon taxon : list) {
-			TaxonOccurrence o = new TaxonOccurrence(taxon.getCode(), taxon.getScientificName());
+			TaxonOccurrence o = new TaxonOccurrence(taxon.getSystemId(), taxon.getCode(), taxon.getScientificName());
 			result.add(o);
 		}
 		return result;
@@ -112,6 +112,17 @@ public class SpeciesManager {
 			Taxon taxon = taxonDao.loadById(taxonId);
 			TaxonOccurrence o = new TaxonOccurrence(taxon.getCode(), taxon.getScientificName(), taxonVernacularName.getVernacularName(), taxonVernacularName.getLanguageCode(),
 					taxonVernacularName.getLanguageVariety());
+			result.add(o);
+		}
+		return result;
+	}
+
+	public List<TaxonOccurrence> findByScientificNameByTaxonRank(String taxonomyName, String searchString, int maxResults, String rank) {
+		Taxonomy taxonomy = taxonomyDao.load(taxonomyName);
+		List<Taxon> list = taxonDao.findByScientificNameByTaxonRank(taxonomy.getId(), searchString, maxResults, rank);
+		List<TaxonOccurrence> result = new ArrayList<TaxonOccurrence>();
+		for (Taxon taxon : list) {
+			TaxonOccurrence o = new TaxonOccurrence(taxon.getSystemId(), taxon.getCode(), taxon.getScientificName());
 			result.add(o);
 		}
 		return result;
