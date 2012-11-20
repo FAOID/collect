@@ -149,12 +149,12 @@ public class SpeciesDaoIntegrationTest {
 
 	@Test
 	public void testFindUnicode() throws Exception {
-		testFindVernacularName("Орех", 100, 1);
+		testFindVernacularName("Орех", 100, 0);
 	}
 
 	@Test
 	public void testFindUnicodeCaseInsensitive() throws Exception {
-		testFindVernacularName("орех", 100, 1);
+		testFindVernacularName("орех", 100, 0);
 	}
 
 	@Test
