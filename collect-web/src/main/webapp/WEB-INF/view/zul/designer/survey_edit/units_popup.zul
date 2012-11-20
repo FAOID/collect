@@ -1,0 +1,101 @@
+<?component name="fieldErrorHandler" class="org.openforis.collect.designer.component.FieldErrorHandler"?>
+<zk>
+	<window id="unitsManagerPopUp" title="${labels.survey.unit.manager.title}" 
+		width="800px"
+		height="470px"
+		border="normal"
+		position="center" 
+		closable="false"
+		apply="org.zkoss.bind.BindComposer"
+		viewModel="@id('vm') @init('org.openforis.collect.designer.viewmodel.UnitsVM')"
+		validationMessages="@id('vmsgs')">
+		<borderlayout>
+			<west width="300px">
+				<vlayout>
+			        <listbox id="itemsListBox"
+			        	selectedItem="@load(vm.selectedItem)"
+			        	model="@load(vm.items)"
+			        	onSelect="@command('selectionChanged', selectedItem=self.selectedItem.value)"
+			        	height="300px"
+			        	width="100%">
+			        	<listhead>
+							<listheader label="" width="100%" />
+						</listhead>
+			            <template name="model">
+			                <listitem>
+			                    <listcell label="@load(each.name)" />
+			                </listitem>
+			            </template>
+			        </listbox>
+                    <menubar>
+    			      <menuitem label="${labels.global.add_item}" 
+                          onClick="@command('newItem')" />
+                      <menuitem label="${labels.global.delete_item}"
+                          disabled="@load(empty vm.selectedItem)"
+                          onClick="@command('deleteItem', item=vm.selectedItem)" />
+                    </menubar>
+			    </vlayout>
+			</west>
+		    <center>
+		        <vlayout
+		        	id="formContainer"
+		        	visible="@load(vm.editingItem)"
+					form="@id('fx') 
+						@load(vm.formObject) @save(vm.formObject, before='applyChanges')
+						@validator('org.openforis.collect.designer.form.validator.UnitFormValidator')"
+					width="100%">
+					<grid>
+						<columns>
+							<column label="" width="150px" />
+							<column label="" width="100%" />
+						</columns>
+						<rows>
+							<row>
+								<label value="${labels.survey.unit.name}:" />
+                                <fieldErrorHandler message="@load(vmsgs['name'])">
+									<textbox width="150px" value="@bind(fx.name)" onChange="@command('applyChanges')" />
+                                </fieldErrorHandler>
+							</row>
+							<row>
+								<label value="${labels.survey.unit.label}:" />
+                                <fieldErrorHandler message="@load(vmsgs['label'])">
+									<textbox id="labelTextBox" width="150px" value="@bind(fx.label)" onChange="@command('applyChanges')" />
+                                </fieldErrorHandler>
+							</row>
+							<row>
+								<label value="${labels.survey.unit.abbreviation}:" />
+                                <fieldErrorHandler message="@load(vmsgs['abbreviation'])">
+									<textbox width="150px" value="@bind(fx.abbreviation)" onChange="@command('applyChanges')" />
+                                </fieldErrorHandler>
+							</row>
+							<row>
+								<label value="${labels.survey.unit.dimension.$}:" />
+                                <fieldErrorHandler message="@load(vmsgs['dimensionLabel'])">
+									<listbox width="150px" model="@load(vm.availableDimensions)"
+										selectedItem="@bind(fx.dimensionLabel)" mold="select"
+										onSelect="@command('applyChanges')" >
+										<template name="model">
+											<listitem label="@load(each)" />
+										</template>
+									</listbox>
+                                </fieldErrorHandler>
+							</row>
+							<row>
+								<label value="${labels.survey.unit.conversionFactor}:" />
+                                <fieldErrorHandler message="@load(vmsgs['conversionFactor'])">
+									<decimalbox width="150px" value="@bind(fx.conversionFactor)" onChange="@command('applyChanges')" />
+                                </fieldErrorHandler>
+							</row>
+						</rows>
+					</grid>
+				</vlayout>
+			</center>
+			<south>
+				<box align="center" width="100%">
+					<button label="${labels.global.ok}" 
+						onClick="@global-command('closeUnitsManagerPopUp')" />
+				</box>
+			</south>
+	    </borderlayout>
+	</window>
+</zk>

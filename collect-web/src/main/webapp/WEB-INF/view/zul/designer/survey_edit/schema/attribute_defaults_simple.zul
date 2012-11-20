@@ -1,0 +1,26 @@
+<zk>
+	<vlayout>
+		<listbox id="attributeDefaultsList"
+            model="@load(vm.attributeDefaults)"
+            selectedItem="@bind(vm.selectedAttributeDefault)">
+           <listhead visible="false">
+              <listheader label="" width="200px" />
+            </listhead>
+           <template name="model">
+            <listitem>
+              <listcell>
+				<textbox inplace="true" value="@bind(each.value)" width="99%"
+                    onFocus="@command('selectAttributeDefault', attributeDefault = each)" />
+              </listcell>
+            </listitem>
+  		  </template>
+		</listbox>
+        <menubar>
+          <menuitem label="${labels.global.add_item}"
+              onClick="@command('addAttributeDefault')" />
+          <menuitem label="${labels.global.delete_item}"
+              disabled="@load(empty vm.selectedAttributeDefault)"
+              onClick="@command('deleteAttributeDefault', attributeDefault=vm.selectedAttributeDefault)" />
+        </menubar>
+	</vlayout>
+</zk>

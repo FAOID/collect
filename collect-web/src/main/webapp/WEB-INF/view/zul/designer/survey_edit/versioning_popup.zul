@@ -1,0 +1,99 @@
+<?component name="fieldErrorHandler" class="org.openforis.collect.designer.component.FieldErrorHandler"?>
+<zk>
+	<window id="versioningManagerPopUp" title="${labels.survey.versioning_manager}" 
+		apply="org.zkoss.bind.BindComposer"
+		viewModel="@id('vm') @init('org.openforis.collect.designer.viewmodel.VersioningVM')"
+		validationMessages="@id('vmsgs')"
+		width="800px" 
+		height="300px"
+		border="normal"
+		position="center" 
+		closable="false">
+		<borderlayout>
+			<west width="180px">
+				<borderlayout>
+					<center border="none">
+						<listbox id="itemsListBox"
+				        	selectedItem="@load(vm.selectedItem)"
+				        	model="@load(vm.items)"
+				        	onSelect="@command('selectionChanged', selectedItem=self.selectedItem.value)"
+				        	width="100%px"
+				        	vflex="true">
+				        	<listhead>
+								<listheader label="" width="100%" />
+							</listhead>
+				            <template name="model">
+				                <listitem>
+				                    <listcell label="@load(each.name)" />
+				                </listitem>
+				            </template>
+				        </listbox>
+					</center>
+					<south border="none">
+				        <toolbar>
+				        	<toolbarbutton label="${labels.global.add_item}" 
+                                    onClick="@command('newItem')" />
+				        	<toolbarbutton image="/assets/images/arrow-up.png"
+									disabled="@load(vm.moveSelectedItemUpDisabled)" 
+						        	onClick="@command('moveSelectedItemUp')" />
+				        	<toolbarbutton image="/assets/images/arrow-down.png"
+									disabled="@load(vm.moveSelectedItemDownDisabled)" 
+						        	onClick="@command('moveSelectedItemDown')" />
+                            <toolbarbutton label="${labels.global.delete_item}"
+                                    disabled="@load(empty vm.selectedItem)" 
+                                    onClick="@command('deleteItem', item=vm.selectedItem)" />
+				        </toolbar>
+					</south>
+				</borderlayout>
+		    </west>
+	        <center>
+				<vlayout
+					visible="@load(vm.editingItem)"
+					form="@id('fx') 
+						@load(vm.formObject) @save(vm.formObject, before='applyChanges')
+						@validator('org.openforis.collect.designer.form.validator.ModelVersionFormValidator')"
+					width="100%">
+					<grid>
+						<columns>
+							<column label="" width="150px" />
+							<column label="" width="100%" />
+						</columns>
+						<rows>
+							<row>
+								<label value="${labels.survey.versioning.name}:" />
+      			                <fieldErrorHandler message="@load(vmsgs['name'])">
+									<textbox width="150px" value="@bind(fx.name)" onChange="@command('applyChanges')" />
+                                </fieldErrorHandler>
+							</row>
+							<row>
+								<label value="${labels.survey.versioning.label}:" />
+      			                <fieldErrorHandler message="@load(vmsgs['label'])">
+									<textbox id="labelTextBox" width="150px" value="@bind(fx.label)" onChange="@command('applyChanges')" />
+                                </fieldErrorHandler>
+							</row>
+							<row>
+								<label value="${labels.survey.versioning.description}:" />
+      			                <fieldErrorHandler message="@load(vmsgs['description'])">
+									<textbox width="150px" value="@bind(fx.description)" onChange="@command('applyChanges')" />
+                                </fieldErrorHandler>
+							</row>
+							<row>
+								<label value="${labels.survey.versioning.date}:" />
+      			                <fieldErrorHandler message="@load(vmsgs['date'])">
+									<datebox width="100px" compact="false" buttonVisible="true" format="@load(vm.dateFormat)" 
+			                    		value="@bind(fx.date)" onChange="@command('applyChanges')" />
+                                </fieldErrorHandler>
+							</row>
+						</rows>
+					</grid>
+				</vlayout>
+			</center>
+			<south>
+				<box align="center" width="100%">
+					<button label="${labels.global.ok}" 
+						onClick="@global-command('closeVersioningManagerPopUp')" />
+				</box>
+			</south>
+		</borderlayout>
+	</window>
+</zk>

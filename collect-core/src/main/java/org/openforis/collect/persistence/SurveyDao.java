@@ -4,11 +4,6 @@ import static org.openforis.collect.persistence.jooq.Sequences.OFC_SURVEY_ID_SEQ
 import static org.openforis.collect.persistence.jooq.tables.OfcRecord.OFC_RECORD;
 import static org.openforis.collect.persistence.jooq.tables.OfcSurvey.OFC_SURVEY;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -18,6 +13,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SelectConditionStep;
@@ -29,16 +26,11 @@ import org.openforis.collect.model.CollectSurveyContext;
 import org.openforis.collect.persistence.jooq.JooqDaoSupport;
 import org.openforis.collect.persistence.xml.CollectIdmlBindingContext;
 import org.openforis.idm.metamodel.ExternalCodeListProvider;
-import org.openforis.idm.metamodel.NodeDefinition;
-import org.openforis.idm.metamodel.NumberAttributeDefinition;
-import org.openforis.idm.metamodel.Schema;
 import org.openforis.idm.metamodel.Survey;
 import org.openforis.idm.metamodel.validation.Validator;
 import org.openforis.idm.metamodel.xml.InvalidIdmlException;
 import org.openforis.idm.metamodel.xml.SurveyMarshaller;
 import org.openforis.idm.metamodel.xml.SurveyUnmarshaller;
-import org.openforis.idm.model.EntitySchema;
-import org.openforis.idm.model.Value;
 import org.openforis.idm.model.expression.ExpressionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,30 +38,11 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * @author G. Miceli
  * @author M. Togna
+ * @author S. Ricci
  */
 @Transactional
-public class SurveyDao extends JooqDaoSupport {
-	// private final Log LOG = LogFactory.getLog(SurveyDao.class);
-
-	private CollectIdmlBindingContext bindingContext;
-
-	@Autowired
-	private ExpressionFactory expressionFactory;
-	@Autowired
-	private Validator validator;
-	@Autowired
-	private ExternalCodeListProvider externalCodeListProvider;
-	@Autowired
-	private RecordDao recordDao;
-
-	public SurveyDao() {
-	}
-
-	public void init() {
-		bindingContext = new CollectIdmlBindingContext(
-				new CollectSurveyContext(expressionFactory, validator,
-						externalCodeListProvider));
-	}
+public class SurveyDao extends SurveyBaseDao {
+	private final Log LOG = LogFactory.getLog(SurveyDao.class);
 
 	@Transactional
 	public void importModel(Survey survey) throws SurveyImportException {
@@ -132,78 +105,14 @@ public class SurveyDao extends JooqDaoSupport {
 		return surveys;
 	}
 
-	private CollectSurvey processSurveyRow(Record row) {
-		try {
-			if (row == null) {
-				return null;
-			}
-			String idml = row.getValueAsString(OFC_SURVEY.IDML);
-			CollectSurvey survey = (CollectSurvey) unmarshalIdml(idml);
-			survey.setId(row.getValueAsInteger(OFC_SURVEY.ID));
-			survey.setName(row.getValue(OFC_SURVEY.NAME));
-			return survey;
-		} catch (IOException e) {
-			throw new RuntimeException(
-					"Error deserializing IDML from database", e);
-		}
-	}
-
-	public CollectSurvey unmarshalIdml(String idml) throws IOException {
-		byte[] bytes = idml.getBytes("UTF-8");
-		ByteArrayInputStream is = new ByteArrayInputStream(bytes);
-		return unmarshalIdml(is);
-	}
-	
-	public CollectSurvey unmarshalIdml(InputStream is) throws IOException {
-		SurveyUnmarshaller su = bindingContext.createSurveyUnmarshaller();
-		CollectSurvey survey;
-		try {
-			survey = (CollectSurvey) su.unmarshal(is);
-		} catch (InvalidIdmlException e) {
-			throw new DataInconsistencyException("Invalid idm");
-		}
-		return survey;
-	}
-
-	public void validateAgainstSchema(byte[] idml) throws InvalidIdmlException {
-		SurveyUnmarshaller su = bindingContext.createSurveyUnmarshaller();
-		su.validateAgainstSchema(idml);
-	}
-	
-	public String marshalSurvey(Survey survey) throws SurveyImportException {
-		try {
-			// Serialize Survey to XML
-			ByteArrayOutputStream os = new ByteArrayOutputStream();
-			marshalSurvey(survey, os);
-			return os.toString("UTF-8");
-		} catch (IOException e) {
-			throw new SurveyImportException("Error marshalling survey", e);
-		}
-	}
-	
-	public void marshalSurvey(Survey survey, OutputStream os) throws SurveyImportException {
-		try {
-			SurveyMarshaller sm = bindingContext.createSurveyMarshaller();
-			sm.setIndent(true);
-			sm.marshal(survey, os);
-		} catch (IOException e) {
-			throw new SurveyImportException("Error marshalling survey", e);
-		}
-	}
-
 	public void clearModel() {
 		Factory jf = getJooqFactory();
 		jf.delete(OFC_RECORD).execute();
 		jf.delete(OFC_SURVEY).execute();
 	}
 
-	public CollectIdmlBindingContext getBindingContext() {
-		return bindingContext;
-	}
-
-	@SuppressWarnings("unused")
-	public void updateModel(CollectSurvey newSurvey) throws SurveyImportException {
-		String name = newSurvey.getName();
+	public void updateModel(CollectSurvey survey) throws SurveyImportException {
+		String name = survey.getName();
 		if (StringUtils.isBlank(name)) {
 			throw new SurveyImportException(
 					"Survey name must be set before importing");
@@ -219,10 +128,14 @@ public class SurveyDao extends JooqDaoSupport {
 		query.execute();
 		Result<Record> result = query.getResult();
 
-		System.out.println("Checking survey");
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug("Checking survey");
+		}
 		if (result.isEmpty()) { // we should insert it now			
 			surveyId = jf.nextval(OFC_SURVEY_ID_SEQ).intValue();
-			System.out.println("    Survey " +  name + " not exist. Inserting with ID = " + surveyId );
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debug("    Survey " +  name + " not exist. Inserting with ID = " + surveyId );
+			}
 			jf.insertInto(OFC_SURVEY).set(OFC_SURVEY.ID, surveyId)
 					.set(OFC_SURVEY.NAME, newSurvey.getName())
 					.set(OFC_SURVEY.URI, newSurvey.getUri())
@@ -359,8 +272,10 @@ public class SurveyDao extends JooqDaoSupport {
 						
 			Record record = result.get(0);			
 			surveyId = record.getValueAsInteger(OFC_SURVEY.ID);			
-			newSurvey.setId(surveyId);
-			System.out.println("    Survey " +  name + " exist. Updating with ID = " + surveyId );
+			survey.setId(surveyId);
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debug("    Survey " +  name + " exist. Updating with ID = " + surveyId );
+			}
 			jf.update(OFC_SURVEY)
 					.set(OFC_SURVEY.IDML, Factory.val(idml, SQLDataType.CLOB))
 					.set(OFC_SURVEY.NAME, newSurvey.getName())
@@ -368,5 +283,33 @@ public class SurveyDao extends JooqDaoSupport {
 					.where(OFC_SURVEY.ID.equal(newSurvey.getId())).execute();
 		}
 
+	}
+	
+	@Override
+	protected CollectSurvey processSurveyRow(Record row) {
+		try {
+			if (row == null) {
+				return null;
+			}
+			String idml = row.getValueAsString(OFC_SURVEY.IDML);
+			CollectSurvey survey = unmarshalIdml(idml);
+			survey.setId(row.getValueAsInteger(OFC_SURVEY.ID));
+			survey.setName(row.getValue(OFC_SURVEY.NAME));
+			return survey;
+		} catch (IdmlParseException e) {
+			throw new RuntimeException("Error deserializing IDML from database", e);
+		}
+	}
+	
+	@Override
+	protected SurveySummary processSurveySummaryRow(Record row) {
+		if (row == null) {
+			return null;
+		}
+		Integer id = row.getValueAsInteger(OFC_SURVEY.ID);
+		String name = row.getValue(OFC_SURVEY.NAME);
+		String uri = row.getValue(OFC_SURVEY.URI);
+		SurveySummary survey = new SurveySummary(id, name, uri);
+		return survey;
 	}
 }

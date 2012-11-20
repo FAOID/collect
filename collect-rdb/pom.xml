@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>collect</artifactId>
 		<groupId>org.openforis.collect</groupId>
-		<version>3.0-Alpha3-SNAPSHOT</version>
+		<version>3.0-Alpha5-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>collect-rdb</artifactId>
@@ -30,6 +30,14 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
+		<!--  Remove -->
+		<dependency>
+			<groupId>postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>9.1-901.jdbc4</version>
+		</dependency>
+		
 	</dependencies>
 
 </project>

@@ -4,25 +4,16 @@
 	<parent>
 		<groupId>org.openforis.collect</groupId>
 		<artifactId>collect</artifactId>
-		<version>3.0-Alpha3-SNAPSHOT</version>
+		<version>3.0-Alpha5-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>collect-core</artifactId>
 	<packaging>jar</packaging>
 	
 	<properties>
-		<geotools.version>2.6.5</geotools.version>
 		<jooq.version>2.0.5</jooq.version>
 		<jooq-codegen.version>2.0.1</jooq-codegen.version>
 	</properties>
-
-	<repositories>
-		<repository>
-			<id>osgeo</id>
-			<name>Open Source Geospatial Foundation Repository</name>
-			<url>http://download.osgeo.org/webdav/geotools/</url>
-		</repository>
-	</repositories>
 
 	<build>
 		<plugins>
@@ -162,7 +153,7 @@
 		            </configuration>
 		          </execution>
 		          <execution>
-		            <id>add-integration-test-esources</id>
+		            <id>add-integration-test-sources</id>
 		            <phase>compile</phase>
 		            <goals>
 		              <goal>add-test-source</goal>
@@ -288,9 +279,13 @@
 		<dependency>
 			<groupId>org.openforis.idm</groupId>
 			<artifactId>idm-api-protostuff</artifactId>
-			<version>3.0-Alpha3-SNAPSHOT</version>
+			<version>3.1-SNAPSHOT</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.openforis.idm</groupId>
+			<artifactId>idm-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<!-- Apache commons -->
 		<dependency>
 			<groupId>commons-logging</groupId>
@@ -305,34 +300,19 @@
 			<artifactId>commons-collections</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.6</version>
+		</dependency>
+		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
-		</dependency>
-		<!-- GeoTools -->
-		<dependency>
-			<groupId>org.geotools</groupId>
-			<artifactId>gt-main</artifactId>
-			<version>${geotools.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.geotools</groupId>
-			<artifactId>gt-metadata</artifactId>
-			<version>${geotools.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.geotools</groupId>
-			<artifactId>gt-referencing</artifactId>
-			<version>${geotools.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.geotools</groupId>
-			<artifactId>gt-epsg-wkt</artifactId>
-			<version>${geotools.version}</version>
 		</dependency>
 		<dependency>
 		  <groupId>org.jooq</groupId>
 		  <artifactId>jooq</artifactId>
 		  <version>${jooq.version}</version>
+          <scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -348,9 +328,15 @@
 			<artifactId>spring-jdbc</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.sun.xml.bind</groupId>
-			<artifactId>jaxb-impl</artifactId>
-		</dependency>  
+			<groupId>xmlpull</groupId>
+			<artifactId>xmlpull</artifactId>
+			<version>1.1.3.4a</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-core</artifactId>
+			<version>3.6.1</version>
+		</dependency>
 		
 		<!--  TEST DEPENDENCIES -->
 		<dependency>
@@ -388,13 +374,9 @@
 			  <scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>xmlpull</groupId>
-			<artifactId>xmlpull</artifactId>
-			<version>1.1.3.4a</version>
-		</dependency>
-		<dependency>
-			<groupId>org.openforis.idm</groupId>
-			<artifactId>idm-test</artifactId>
+			<groupId>net.sf.kxml</groupId>
+			<artifactId>kxml2</artifactId>
+			<version>2.3.0</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

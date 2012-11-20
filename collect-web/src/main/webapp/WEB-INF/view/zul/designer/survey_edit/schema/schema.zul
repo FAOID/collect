@@ -1,0 +1,98 @@
+<zk>
+	<div id="itemsContainer"
+		apply="org.openforis.collect.designer.composer.SurveySchemaEditComposer"
+		viewModel="@id('vm') @init('org.openforis.collect.designer.viewmodel.SchemaVM')"
+		width="100%" height="100%">
+		<borderlayout>
+		 	<west title="${labels.survey.schema.entities_title}"
+		 		width="350px"
+		 		splittable="true">
+		 		<borderlayout>
+		 			<center>
+						<tree id="nodesTree"
+							width="100%" vflex="true"
+							model="@load(vm.nodes)"
+                            context="nodesTreePopup"
+							onSelect="@command('nodeSelected', node=self.selectedItem)">
+							<template name="model">
+					            <treeitem draggable="false" context="@load(vm.isEntity(each.data) ? entityPopup: attributePopup)"> 
+					                <treerow>
+					                    <treecell label="@load(each.data.name)"/>
+					                </treerow>
+					            </treeitem>
+					  		</template>
+					    </tree>
+		 			</center>
+		 			<south>
+				        <menubar width="100%">
+			                <menuitem image="/assets/images/arrow-up.png"
+			                	class="icon-button" 
+								disabled="@load(vm.moveNodeUpDisabled)" 
+					        	onClick="@command('moveNodeUp')" />
+			                <menuitem image="/assets/images/arrow-down.png"
+			                	class="icon-button" 
+			                	disabled="@load(vm.moveNodeDownDisabled)" 
+					        	onClick="@command('moveNodeDown')" />
+			             </menubar>
+		 			</south>
+			    </borderlayout>
+			</west>
+			<center title="${labels.survey.schema.node_detail_title}">
+				<borderlayout hflex="1" visible="@load(not empty vm.editedNode)">
+					<north height="@load(vm.nodeType eq 'ATTRIBUTE' ? '60px': '30px')"
+						border="none">
+						<grid height="100%">
+							<columns>
+								<column label="" width="150px" />
+								<column label="" width="100%" />
+							</columns>
+							<rows>
+								<row>
+									<label value="${labels.survey.schema.node.type_label}:" />
+									<label value="@load(vm.nodeType eq 'ENTITY' ? 
+											labels.survey.schema.node.type.entity: 
+											labels.survey.schema.node.type.attribute)" />
+								</row>
+								<row visible="@load(vm.nodeType eq 'ATTRIBUTE')">
+									<label value="${labels.survey.schema.attribute.type_label}:" />
+									<label visible="@laod(vm.nodeType eq 'ATTRIBUTE')" 
+											value="@load(vm.attributeTypeLabel)" />
+								</row>
+							</rows>
+						</grid>
+					</north>
+					<center border="none">
+						<include id="nodeFormInclude"
+							visible="@load(vm.editingNode)"
+							height="100%" width="100%" style="overflow: auto;" />
+					</center>
+				</borderlayout>
+			</center>
+          </borderlayout>
+      
+        <menupopup id="nodesTreePopup">
+          <menuitem label="${labels.survey.schema.add_entity}" 
+            onClick="@command('addRootEntity')" />
+        </menupopup>
+        <menupopup id="entityPopup">
+          <menuitem label="${labels.survey.schema.add_child_entity}" 
+            onClick="@command('addChildEntity')" />
+           <menu label="${labels.survey.schema.add_attribute.label}">
+              <menupopup>
+                  <zk forEach="${vm.attributeTypeValues}">
+                    <menuitem
+                      label="${vm.getAttributeTypeLabel(each)}" value="${each}"
+                      onClick="@command('addAttribute', attributeType=self.value)" />
+                  </zk>
+              </menupopup>
+       	  </menu>
+          <menuseparator />
+          <menuitem label="${labels.survey.schema.remove_node}" 
+              onClick="@command('removeNode')" />
+        </menupopup>
+        <menupopup id="attributePopup">
+          <menuitem label="${labels.survey.schema.remove_node}" 
+              onClick="@command('removeNode')" />
+        </menupopup>
+    </div>
+</zk>
