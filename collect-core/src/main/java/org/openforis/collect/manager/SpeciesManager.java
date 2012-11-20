@@ -128,4 +128,18 @@ public class SpeciesManager {
 		return result;
 	}
 
+	public List<TaxonVernacularName> findByVernacularName(String taxonomyName, String searchString, int maxResults) {
+		Taxonomy taxonomy = taxonomyDao.load(taxonomyName);
+		List<TaxonVernacularName> list = taxonVernacularNameDao.findByVernacularName(taxonomy.getId(), searchString, maxResults);
+		List<TaxonOccurrence> result = new ArrayList<TaxonOccurrence>();
+		for (TaxonVernacularName taxonVernacularName : list) {
+			Integer taxonId = taxonVernacularName.getTaxonSystemId();
+			Taxon taxon = taxonDao.loadById(taxonId);
+			TaxonOccurrence o = new TaxonOccurrence(taxon.getCode(), taxon.getScientificName(), taxonVernacularName.getVernacularName(), taxonVernacularName.getLanguageCode(),
+					taxonVernacularName.getLanguageVariety());
+			result.add(o);
+		}
+		return list;
+	}
+
 }
