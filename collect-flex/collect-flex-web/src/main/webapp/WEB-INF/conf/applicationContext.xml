@@ -62,6 +62,7 @@
 	<bean id="fileNameViewController" class="org.springframework.web.servlet.mvc.UrlFilenameViewController" />
 	<bean id="surveyImportController" class="org.openforis.collect.web.controller.SurveyImportController" />
 	<bean id="validationController" class="org.openforis.collect.web.controller.ValidationController" />
+	<bean id="tract5PlotaProcessingController" class="org.openforis.collect.web.controller.Tract5PlotaProcessingController" />
 	<bean id="unlockController" class="org.openforis.collect.web.controller.UnlockController" />
 
 	<!-- ===================================== -->

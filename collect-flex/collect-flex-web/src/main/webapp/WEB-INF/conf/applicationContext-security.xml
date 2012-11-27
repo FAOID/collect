@@ -27,6 +27,7 @@
 		<intercept-url pattern="/*" access="hasRole('ROLE_USER')" />
 		<intercept-url pattern="/index.htm" access="hasRole('ROLE_USER')" />
 		<intercept-url pattern="/**/*.swf" access="hasRole('ROLE_USER')" />
+		<intercept-url pattern="/processTract5Plota.htm" access="permitAll" />
 		<!-- <intercept-url pattern="/script/**" access="hasAnyRole('ROLE_ADMIN','ROLE_EDITOR','ROLE_USER')" /> -->
 		
 		<form-login login-page="/login.htm" authentication-failure-url="/login.htm?login_error=1"  />
