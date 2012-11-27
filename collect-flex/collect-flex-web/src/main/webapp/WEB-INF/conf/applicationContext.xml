@@ -41,6 +41,8 @@
 		<entry key="/exitUser.htm" value-ref="fileNameViewController" />
 		<entry key="/login.htm" value-ref="fileNameViewController" />
 		<entry key="/importSurvey.htm" value-ref="fileNameViewController" />
+		<entry key="/processTract5Plota.htm" value-ref="tract5PlotaProcessingController" />
+
 	</util:map>
 
 	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
