@@ -7,6 +7,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -771,7 +775,7 @@ public class Tract5PlotaProcessingController {
 	        }
 	    }
 
-	private void synchReportTable() throws URISyntaxException, IOException {
+	private void synchReportTable() throws URISyntaxException, IOException, SQLException {
 		String sRootPath = new File("").getAbsolutePath();
 		URI uri = new URI("file:///"+ sRootPath + "/ReportNV-SE.xlsx");
 		FileInputStream fileInputStream = new FileInputStream(uri.getPath());
@@ -780,21 +784,140 @@ public class Tract5PlotaProcessingController {
 		int rowNum = 0;
 		Iterator<Row> iter = worksheet.rowIterator();
 		
+		Connection con = openConnection("postgres", "adminadmin");
+		Statement stmt = con.createStatement();
+		stmt.execute("delete from idcalc.report");
 		System.out.println("Reading from " + uri.getPath());
 		while(iter.hasNext())
 		{	
 			rowNum++;
 			Row row = iter.next();
-			if(rowNum>1)
+			if(rowNum>1 && iter.hasNext())
 			{
-				String labelPropinsi;
-				Cell cellLabelPropinsi = row.getCell(0);
-				cellLabelPropinsi.setCellType(Cell.CELL_TYPE_STRING);
-				labelPropinsi = cellLabelPropinsi.getStringCellValue();
-				System.out.println(labelPropinsi);
+				String propinsi, klasterkey, tahun;
+				String tspN20, tspV20, pspN20, pspV20;
+				String tspN30, tspV30, pspN30, pspV30;
+				String tspN40, tspV40, pspN40, pspV40;
+				String tspN50, tspV50, pspN50, pspV50;
+				String tspN60, tspV60, pspN60, pspV60;
+				String tspN70, tspV70, pspN70, pspV70;
+				String tspN80, tspV80, pspN80, pspV80;
+				String tspSd, pspSd;
+				Cell cell;
+				
+				propinsi = getStringValue(row, 0, "0.0");
+				klasterkey = getStringValue(row, 1, "0.0");
+				tahun = getStringValue(row, 2, "0.0");
+				tspN20 = getStringValue(row, 3, "0.0");
+				tspV20 = getStringValue(row, 4, "0.0");
+				pspN20 = getStringValue(row, 5, "0.0");
+				pspV20 = getStringValue(row, 6, "0.0");
+
+				tspN30 = getStringValue(row, 7, "0.0");
+				tspV30 = getStringValue(row, 8, "0.0");
+				pspN30 = getStringValue(row, 9, "0.0");
+				pspV30 = getStringValue(row, 10, "0.0");
+
+				tspN40 = getStringValue(row, 11, "0.0");
+				tspV40 = getStringValue(row, 12, "0.0");
+				pspN40 = getStringValue(row, 13, "0.0");
+				pspV40 = getStringValue(row, 14, "0.0");
+
+				tspN50 = getStringValue(row, 15, "0.0");
+				tspV50 = getStringValue(row, 16, "0.0");
+				pspN50 = getStringValue(row, 17, "0.0");
+				pspV50 = getStringValue(row, 18, "0.0");
+
+				tspN60 = getStringValue(row, 19, "0.0");
+				tspV60 = getStringValue(row, 20, "0.0");
+				pspN60 = getStringValue(row, 21, "0.0");
+				pspV60 = getStringValue(row, 22, "0.0");
+
+				tspN70 = getStringValue(row, 22, "0.0");
+				tspV70 = getStringValue(row, 23, "0.0");
+				pspN70 = getStringValue(row, 24, "0.0");
+				pspV70 = getStringValue(row, 25, "0.0");
+
+				tspN80 = getStringValue(row, 26, "0.0");
+				tspV80 = getStringValue(row, 27, "0.0");
+				pspN80 = getStringValue(row, 28, "0.0");
+				pspV80 = getStringValue(row, 29, "0.0");
+				
+				tspSd = getStringValue(row, 30, "0.0");
+				pspSd = getStringValue(row, 31, "0.0");
+				
+				String sql = "insert into idcalc.report(propinsi, klasterkey, tsp_n20, tsp_v20, psp_n20, psp_v20, tsp_n30, tsp_v30, psp_n30, psp_v30, tsp_n40, tsp_v40, psp_n40, psp_v40, tsp_n50, tsp_v50, psp_n50, psp_v50, tsp_n60, tsp_v60, psp_n60, psp_v60, tsp_n70, tsp_v70, psp_n70, psp_v70, tsp_n80, tsp_v80, psp_n80, psp_v80, sd_tsp,sd_psp) values('" +
+				propinsi  +"','" + klasterkey  + "','" +
+						tspN20 + "','" + tspV20 + "','" + pspN20 + "','" + pspV20 + "','" + 
+						tspN30 + "','" + tspV30 + "','" + pspN30 + "','" + pspV30 + "','" + 
+						tspN40 + "','" + tspV40 + "','" + pspN40 + "','" + pspV40 + "','" + 
+						tspN50 + "','" + tspV50 + "','" + pspN50 + "','" + pspV50 + "','" + 
+						tspN60 + "','" + tspV60 + "','" + pspN60 + "','" + pspV60 + "','" + 
+						tspN70 + "','" + tspV70 + "','" + pspN70 + "','" + pspV70 + "','" + 
+						tspN80 + "','" + tspV80 + "','" + pspN80 + "','" + tspV80 + "','" +
+						tspSd + "','" + pspSd + "')";
+				
+				stmt.execute(sql);
+				
 			}
 		}
 		
+		if(con!=null) con.close();
+		
+	}
+
+	private String getStringValue(Row row, int i, String defaultValue) {
+		String propinsi;
+		Cell cell;
+		cell = row.getCell(i);
+		if(cell==null) return defaultValue;
+		cell.setCellType(Cell.CELL_TYPE_STRING);
+		propinsi = cell.getStringCellValue();
+		return propinsi;
+	}
+
+	private Connection openConnection(String username, String password) {
+			System.out.println("-------- PostgreSQL "
+					+ "JDBC Connection Testing ------------");
+	 
+			try {
+	 
+				Class.forName("org.postgresql.Driver");
+	 
+			} catch (ClassNotFoundException e) {
+	 
+				System.out.println("Where is your PostgreSQL JDBC Driver? "
+						+ "Include in your library path!");
+				e.printStackTrace();
+				return null;
+	 
+			}
+	 
+			System.out.println("PostgreSQL JDBC Driver Registered!");
+	 
+			Connection connection = null;
+	 
+			try {
+	 
+				connection = DriverManager.getConnection(
+						"jdbc:postgresql://localhost:5432/idcalc", username,
+						password);
+	 
+			} catch (SQLException e) {
+	 
+				System.out.println("Connection Failed! Check output console");
+				e.printStackTrace();
+				return null;
+	 
+			}
+	 
+			if (connection != null) {
+				System.out.println("You made it, take control your database now!");
+			} else {
+				System.out.println("Failed to make connection!");
+			}
+		
+		return connection;
 	}	
 }
 
